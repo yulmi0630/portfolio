@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Data Analysis Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bd:  rgba(110,93,80,0.16);
+      --bds: rgba(96,79,67,0.24);
+      --offwhite: rgba(247,244,239,0.97);
+      --lavender: rgba(237,231,245,0.96);
+      --mint:     rgba(225,241,236,0.96);
+      --rose:     rgba(247,229,235,0.96);
+      --cream:    rgba(247,241,226,0.96);
+      --beige:    rgba(239,232,223,0.97);
+      --acc: #4fb799;
+      --dk:  #2f2b27;
+      --mu:  #766c63;
+      --so:  #9a9086;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; padding: 36px 40px 80px; }
+
+    /* ── METHODOLOGY SELECTOR ── */
+    .method-section { background: rgba(14,12,10,.6); border: 1px solid var(--bds); border-radius: 22px; padding: 28px; margin-bottom: 28px; }
+    .method-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--acc); margin-bottom: 18px; }
+    .method-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .method-btn { border-radius: 16px; border: 1px solid rgba(255,255,255,.1); padding: 18px 16px; cursor: pointer; transition: transform .2s, border-color .2s, background .2s; text-align: left; background: rgba(255,255,255,.04); }
+    .method-btn:hover { border-color: rgba(79,183,153,.3); background: rgba(79,183,153,.07); transform: translateY(-2px); }
+    .method-btn.active { border-color: var(--acc); background: rgba(79,183,153,.1); }
+    .mb-icon  { font-size: 24px; margin-bottom: 10px; }
+    .mb-num   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,.35); margin-bottom: 5px; letter-spacing: .08em; }
+    .mb-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.85); margin-bottom: 6px; line-height: 1.35; }
+    .mb-desc  { font-size: 11px; color: rgba(255,255,255,.45); line-height: 1.55; }
+    .mb-tag   { display: inline-block; padding: 2px 7px; background: rgba(79,183,153,.12); border-radius: 5px; font-size: 10px; color: var(--acc); font-weight: 600; margin-top: 8px; }
+
+    /* ── DASHBOARD PANEL ── */
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+    .dash { background: rgba(250,246,240,.97); border-radius: 20px; border: 1px solid var(--bds); overflow: hidden; box-shadow: 0 16px 48px rgba(42,30,18,.12); }
+
+    /* ── TOPBAR ── */
+    .dash-topbar { background: #000; padding: 20px 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+    .dash-topbar-left { flex: 1; }
+    .dash-topbar-title { font-family: 'Barlow', sans-serif; font-size: 24px; font-weight: 600; color: #fff; letter-spacing: -.02em; line-height: 1.25; }
+    .dash-topbar-title em { font-family: 'Instrument Serif', serif; font-style: italic; color: rgba(255,255,255,.65); font-weight: 400; }
+    .dash-topbar-problem { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,.38); margin-top: 5px; letter-spacing: .03em; }
+    .dash-topbar-meta { font-size: 11px; color: rgba(255,255,255,.35); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── BODY ── */
+    .dash-body { padding: 22px; }
+
+    /* ── STORY BLOCK ── */
+    .story-block { border-bottom: 1px solid rgba(96,79,67,.12); padding: 0 0 18px; margin-bottom: 20px; }
+    .story-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+    .sf-cell { padding: 12px 14px; position: relative; }
+    .sf-cell + .sf-cell::before { content: '→'; position: absolute; left: -7px; top: 50%; transform: translateY(-50%); font-size: 12px; color: rgba(96,79,67,.3); font-family: 'JetBrains Mono', monospace; }
+    .sf-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; padding: 2px 7px; border-radius: 5px; display: inline-block; }
+    .lbl-now { background: rgba(47,43,39,.07); color: rgba(47,43,39,.5); }
+    .lbl-why { background: rgba(239,176,93,.15); color: #8a5c00; }
+    .lbl-so  { background: rgba(239,125,134,.13); color: #7a2430; }
+    .lbl-act { background: rgba(53,201,149,.14); color: #1a6b50; }
+    .sf-val  { font-family: 'Barlow', sans-serif; font-size: 16px; font-weight: 700; color: var(--dk); line-height: 1.3; margin-bottom: 4px; }
+    .sf-desc { font-size: 12px; color: rgba(47,43,39,.55); line-height: 1.65; }
+    .sf-desc strong { color: var(--dk); font-weight: 700; }
+    .num-red { color: #9b2d38; font-weight: 700; }
+    .num-grn { color: #1a6b50; font-weight: 700; }
+    .num-yel { color: #8a5c00; font-weight: 700; }
+
+    /* ── STEP HEADER ── */
+    .dash-step-hdr { display: flex; align-items: center; gap: 10px; margin: 22px 0 10px; }
+    .dash-step-hdr:first-child { margin-top: 0; }
+    .dash-step-hdr-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: rgba(47,43,39,.7); padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+    .dash-step-hdr-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; color: rgba(47,43,39,.55); white-space: nowrap; }
+    .dash-step-hdr::after { content: ''; flex: 1; height: 1px; background: rgba(96,79,67,.12); }
+
+    /* ── KPI ROW ── */
+    .dash-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .dk-box { background: #fff; border: 1px solid rgba(96,79,67,.1); border-radius: 14px; padding: 16px; }
+    .dk-val { font-family: 'Barlow', sans-serif; font-size: 26px; font-weight: 600; color: #0a0a0a; margin-bottom: 4px; }
+    .dk-lbl { font-size: 11px; color: var(--mu); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; }
+    .dk-delta { font-size: 12px; font-weight: 600; }
+    .dk-delta.up   { color: #218d72; }
+    .dk-delta.dn   { color: #9b2d38; }
+    .dk-delta.warn { color: #a0620a; }
+
+    /* ── CHART GRID ── */
+    .dash-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; min-width: 0; align-items: stretch; }
+    .dash-charts > * { min-width: 0; overflow: hidden; }
+    .dash-charts.three-eq { grid-template-columns: 1fr 1fr 1fr; }
+    .dash-charts.three    { grid-template-columns: 1.6fr 1fr 1fr; }
+    .dash-charts.four     { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .dash-charts.full     { grid-template-columns: 1fr; }
+    .chart-card { background: #fff; border: 1px solid rgba(96,79,67,.1); border-radius: 14px; padding: 20px; overflow: hidden; min-width: 0; display: flex; flex-direction: column; max-height: 380px; }
+    .chart-card.primary { background: #fff; border: 1px solid rgba(96,79,67,.15); box-shadow: 0 4px 16px rgba(42,30,18,.08); max-height: 440px; }
+    .chart-card.muted { opacity: 0.75; }
+    .dash-charts:not(.full) .chart-card { min-height: 240px; }
+    .dash-charts.full .chart-card { min-height: 200px; max-height: none; }
+    .chart-card svg { display: block; width: 100%; height: auto; max-width: 100%; max-height: none; margin-top: 8px; overflow: visible; }
+    .cc-title { font-size: 13px; font-weight: 700; color: var(--dk); margin-bottom: 5px; line-height: 1.45; }
+    .cc-desc  { font-size: 12px; color: var(--mu); margin-bottom: 14px; line-height: 1.65; }
+
+    /* ── ACTION ITEMS ── */
+    .dash-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .da-item  { background: rgba(247,244,239,.97); border: 1px solid rgba(96,79,67,.12); border-radius: 12px; padding: 13px 14px; }
+    .da-p     { font-size: 10px; font-weight: 700; color: rgba(47,43,39,.45); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .da-title { font-size: 13px; font-weight: 700; color: var(--dk); margin-bottom: 5px; line-height: 1.45; }
+    .da-why   { font-size: 12px; color: rgba(47,43,39,.55); line-height: 1.65; }
+
+    /* ── SIMULATION WIDGET ── */
+    .sim-widget { background: rgba(247,241,226,.7); border: 1px solid rgba(239,176,93,.3); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+    .sim-title  { font-size: 12px; font-weight: 700; color: var(--dk); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; line-height: 1.5; }
+    .sim-badge  { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 5px; background: rgba(239,176,93,.2); color: #8a5c00; border: 1px solid rgba(239,176,93,.3); white-space: nowrap; }
+    .sim-note   { font-size: 12px; color: var(--mu); line-height: 1.65; margin-bottom: 12px; }
+    .sim-row    { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .sim-label  { font-size: 11px; color: var(--mu); white-space: nowrap; }
+    .sim-input  { width: 80px; font-size: 13px; font-weight: 700; color: var(--dk); background: #fff; border: 1px solid rgba(96,79,67,.2); border-radius: 8px; padding: 5px 8px; text-align: center; font-family: 'Barlow', sans-serif; }
+    .sim-slider-row   { margin-bottom: 10px; }
+    .sim-slider-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .sim-range {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 5px; border-radius: 99px; outline: none; cursor: pointer;
+      background: linear-gradient(to right, #4fb799 50%, rgba(96,79,67,.15) 50%);
+      transition: background .1s;
+    }
+    .sim-range::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; border: 2px solid #4fb799;
+      box-shadow: 0 2px 8px rgba(42,30,18,.18); cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .sim-range::-webkit-slider-thumb:hover { transform: scale(1.2); box-shadow: 0 3px 12px rgba(42,30,18,.24); }
+    .sim-range-val { font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 700; color: #4fb799; }
+    .sim-scenario-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .sim-scenario-btn { flex: 1; padding: 10px 6px; border-radius: 12px; border: 1px solid rgba(96,79,67,.15); font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; background: rgba(47,43,39,.05); color: var(--dk); text-align: center; line-height: 1.5; font-family: 'Inter', sans-serif; }
+    .sim-scenario-btn:hover { border-color: rgba(96,79,67,.28); transform: translateY(-2px); }
+    .sim-scenario-btn.active { background: rgba(79,183,153,.14); border-color: rgba(79,183,153,.4); color: #218d72; }
+    .sim-results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .sim-res     { background: #fff; border: 1px solid rgba(96,79,67,.12); border-radius: 9px; padding: 8px 10px; text-align: center; }
+    .sim-res-val { font-family: 'Barlow', sans-serif; font-size: 16px; font-weight: 600; color: var(--dk); }
+    .sim-res-lbl { font-size: 9px; color: var(--mu); margin-top: 2px; }
+
+    /* ── SCENARIO TABS ── */
+    .sc-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .sc-tab  { padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(96,79,67,.15); font-size: 10.5px; font-weight: 700; cursor: pointer; background: rgba(47,43,39,.04); color: rgba(47,43,39,.55); transition: all .15s; font-family: 'Inter', sans-serif; white-space: nowrap; }
+    .sc-tab:hover  { border-color: rgba(96,79,67,.28); color: var(--dk); }
+    .sc-tab.active { background: rgba(79,183,153,.14); border-color: rgba(79,183,153,.45); color: #1a6b50; }
+    .sc-pane        { display: none; }
+    .sc-pane.active { display: block; }
+
+    /* ── INLINE TABLE ── */
+    .pp-tbl    { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+    .pp-tbl th { background: rgba(47,43,39,.09); color: var(--dk); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; padding: 8px 11px; text-align: left; }
+    .pp-tbl td { padding: 8px 11px; color: var(--dk); border-top: 1px solid rgba(96,79,67,.08); vertical-align: top; line-height: 1.6; }
+
+    /* ── TAGS ── */
+    .tag-ok   { display: inline-block; background: rgba(53,201,149,.18); color: #0d7a5c; border-radius: 5px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
+    .tag-warn { display: inline-block; background: rgba(239,176,93,.2);  color: #a0620a; border-radius: 5px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
+    .tag-bad  { display: inline-block; background: rgba(239,125,134,.2); color: #9b2d38; border-radius: 5px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box { border-radius: 9px; padding: 10px 12px; font-size: 12px; line-height: 1.65; margin-top: 10px; }
+    .highlight-box.warn { background: rgba(239,125,134,.1); border: 1px solid rgba(239,125,134,.25); color: #7a2430; }
+    .highlight-box.ok   { background: rgba(53,201,149,.1);  border: 1px solid rgba(53,201,149,.25); color: #1a6b50; }
+    .highlight-box.info { background: rgba(91,107,191,.08); border: 1px solid rgba(91,107,191,.2);  color: #3d4fa0; }
+
+    /* ── FOOTNOTE ── */
+    .footnote { text-align: center; font-size: 11px; color: rgba(255,255,255,.2); margin-top: 32px; font-family: 'JetBrains Mono', monospace; letter-spacing: .05em; }
+
+    /* SVG 폰트 통일 */
+    .dash svg text { font-family: 'Inter', -apple-system, sans-serif; font-style: normal; }
+
+    /* ── AI TRACE (v2.0) ── */
+    .ai-trace { background: rgba(91,107,191,.07); border: 1px solid rgba(91,107,191,.18); border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px; }
+    .ai-trace-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; }
+    .ai-trace-body { flex: 1; }
+    .ai-trace-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #3d4fa0; margin-bottom: 4px; }
+    .ai-trace-text { font-size: 11px; color: rgba(47,43,39,.65); line-height: 1.65; font-style: italic; }
+
+    /* ── CONFLICT CARD (v2.0) ── */
+    .conflict-card { border: 1px solid rgba(239,176,93,.35); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+    .conflict-card-header { background: rgba(239,176,93,.12); padding: 8px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #8a5c00; letter-spacing: .08em; display: flex; align-items: center; gap: 7px; }
+    .conflict-cols { display: grid; grid-template-columns: 1fr 1fr; }
+    .conflict-col { padding: 12px 14px; }
+    .conflict-col.ai-side { background: rgba(91,107,191,.06); border-right: 1px solid rgba(91,107,191,.15); }
+    .conflict-col.human-side { background: rgba(239,176,93,.06); }
+    .conflict-col-label { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+    .conflict-col.ai-side .conflict-col-label { color: #3d4fa0; }
+    .conflict-col.human-side .conflict-col-label { color: #8a5c00; }
+    .conflict-col-val { font-family: 'Barlow', sans-serif; font-size: 18px; font-weight: 600; color: var(--dk); margin-bottom: 4px; }
+    .conflict-col-desc { font-size: 11px; color: var(--mu); line-height: 1.55; }
+    .conflict-gap { padding: 8px 14px; background: rgba(239,125,134,.07); border-top: 1px solid rgba(239,125,134,.18); font-size: 11px; color: #7a2430; font-weight: 600; }
+
+    /* ── DRILL-DOWN DETAIL TABLE (v2.0) ── */
+    .drill-details { margin-top: 10px; }
+    .drill-details summary { font-size: 11px; font-weight: 700; color: #3d4fa0; cursor: pointer; padding: 6px 10px; background: rgba(91,107,191,.07); border-radius: 7px; list-style: none; display: flex; align-items: center; gap: 6px; user-select: none; }
+    .drill-details summary::before { content: ''; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px; border-color: transparent transparent transparent #3d4fa0; display: inline-block; transition: transform .2s; }
+    .drill-details[open] summary::before { transform: rotate(90deg); }
+    .drill-details summary::-webkit-details-marker { display: none; }
+    .drill-tbl { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+    .drill-tbl th { background: rgba(47,43,39,.07); color: var(--dk); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; padding: 6px 10px; text-align: left; }
+    .drill-tbl td { padding: 6px 10px; color: var(--dk); border-top: 1px solid rgba(96,79,67,.08); vertical-align: top; line-height: 1.5; }
+    .drill-tbl tr:hover td { background: rgba(47,43,39,.03); }
+  </style>
+
+<style id="v3-quality-overrides">
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .dash-topbar-problem {
+    font-size: 18px !important;
+    line-height: 1.45 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+  }
+  .dash-topbar-problem strong {
+    display: inline-block;
+    margin-right: 10px;
+    color: #35c995;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .chart-card {
+    max-height: none !important;
+    overflow: visible !important;
+    min-width: 0 !important;
+  }
+  .chart-card svg.chart-svg {
+    max-height: 300px;
+  }
+  .chart-card table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .chart-card th,
+  .chart-card td {
+    word-break: keep-all;
+    white-space: nowrap;
+  }
+  @media (max-width: 640px) {
+    body {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+    .method-section {
+      padding: 18px !important;
+      border-radius: 16px !important;
+    }
+    .method-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 10px !important;
+    }
+    .method-btn,
+    .mb-icon,
+    .mb-num,
+    .mb-title,
+    .mb-desc,
+    .mb-tag,
+    .dk-box,
+    .dk-lbl,
+    .dk-val,
+    .dk-delta {
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    .method-btn {
+      padding: 14px 12px !important;
+    }
+    .dash-kpi-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .dash-charts,
+    .dash-charts.three-eq,
+    .dash-charts.four {
+      grid-template-columns: 1fr !important;
+    }
+    .dash-step-hdr {
+      align-items: flex-start !important;
+    }
+    .dash-step-hdr-label {
+      white-space: normal !important;
+      line-height: 1.45 !important;
+    }
+    .chart-card table { font-size: 10px; }
+    .chart-card {
+      overflow: hidden !important;
+    }
+    .chart-card table {
+      display: table !important;
+      table-layout: fixed !important;
+      overflow: hidden !important;
+    }
+    .chart-card thead,
+    .chart-card tbody,
+    .chart-card tr {
+      max-width: 100% !important;
+    }
+    .chart-card th,
+    .chart-card td {
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      overflow-wrap: anywhere !important;
+    }
+  }
+</style>
+
+</head>
+<body>
+
+<div style="background:#f7f1e0;border-bottom:1px solid #d4c89a;color:#7a5a14;padding:10px 18px;font:500 13px/1.5 'Pretendard Variable',Pretendard,system-ui,sans-serif;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:-36px -40px 24px">
+<span>📊 본 대시보드는 포트폴리오용 <strong>샘플·모의 데이터</strong>로 구동됩니다 · 실 회사 데이터 미포함</span>
+<a href="../../" style="color:#7a5a14;text-decoration:underline;font-weight:600">← 포트폴리오 메인으로</a>
+</div>
+
+<!-- METHODOLOGY SELECTOR -->
+<div class="method-section">
+  <div class="method-label">SCM Pipeline · 4 Analysis Views</div>
+  <div class="method-grid">
+    <div class="method-btn active" onclick="switchPanel(0,this)">
+      <div class="mb-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="10" width="4" height="10" rx="1" fill="rgba(255,255,255,0.5)"/><rect x="9" y="6" width="4" height="14" rx="1" fill="rgba(255,255,255,0.5)"/><rect x="16" y="2" width="4" height="18" rx="1" fill="rgba(255,255,255,0.5)"/></svg></div>
+      <div class="mb-num">01 — 재고 건전성</div>
+      <div class="mb-title">재고 보충 우선순위</div>
+      <div class="mb-desc">ABC · DOS · SR · 안전재고로 과잉/부족 동시 관리</div>
+      <div class="mb-tag">SR 30.2%</div>
+    </div>
+    <div class="method-btn" onclick="switchPanel(1,this)">
+      <div class="mb-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><polyline points="2,16 7,10 11,13 16,7 20,4" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><polyline points="16,4 20,4 20,8" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+      <div class="mb-num">02 — 수요예측</div>
+      <div class="mb-title">예측 보정 대상</div>
+      <div class="mb-desc">SS/FW MAPE · Bias · Look-alike 신상품 분리</div>
+      <div class="mb-tag">FW MAPE 13.6%</div>
+    </div>
+    <div class="method-btn" onclick="switchPanel(2,this)">
+      <div class="mb-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><path d="M11 11 L11 4" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/><path d="M11 11 L16 14" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="mb-num">03 — 리드타임</div>
+      <div class="mb-title">공급업체 OTIF</div>
+      <div class="mb-desc">OTIF 완전계산 · Lead Time CV · SLA 개선</div>
+      <div class="mb-tag">OTIF 58.8%</div>
+    </div>
+    <div class="method-btn" onclick="switchPanel(3,this)">
+      <div class="mb-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><rect x="12" y="3" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><rect x="3" y="12" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><rect x="12" y="12" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/></svg></div>
+      <div class="mb-num">04 — 물류비</div>
+      <div class="mb-title">물류비 4M</div>
+      <div class="mb-desc">4M · 단가 이상치 · FW 피크 비용 시나리오</div>
+      <div class="mb-tag">단가 3,039원</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+  PANEL 0 — 재고 건전성
+════════════════════════════════════════════ -->
+<div class="dash-panel active" id="panel-0">
+<div class="dash">
+  <div class="dash-topbar">
+    <div class="dash-topbar-left">
+      <div class="dash-topbar-title">재고 건전성 — <em>ABC Analysis · DOS · Inventory Health</em></div>
+      <div class="dash-topbar-problem"><strong>Business Question</strong> FW 시즌 맥락: FW 시즌 재고 의사결정은 전체 평균이 아니라 DOS·SR·ABC를 결합한 SKU 보충 큐로 해야 합니다. 질문: FW 시즌에서 품절/저재고 10개와 사이즈 깨짐 22개 SKU 중 무엇을 먼저 보충해야 하는가?</div>
+    </div>
+    <span class="dash-topbar-meta">2024-01 ~ 2025-12</span>
+  </div>
+  <div class="dash-body">
+
+    <div class="ai-trace">
+      <svg class="ai-trace-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="#3d4fa0" stroke-width="1.2"/><path d="M10 6v5l3 2" stroke="#3d4fa0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="ai-trace-body">
+        <div class="ai-trace-label">AI Reasoning Trace — 재고 건전성</div>
+        <div class="ai-trace-text">재고 건전성 trace · ABC × DOS × SR 결합 · 근거: 평균 DOS 11.4일, 중앙값 7.2일; 서비스율 81.8% (품절 4 + 저재고 6); SR 평균 30.2%; 1순위 보충 SKU = BTM-001 (A등급, DOS 0일, 결품사이즈 11종)</div>
+      </div>
+    </div>
+
+    <div class="story-block">
+      <div class="story-flow">
+        <div class="sf-cell"><div class="sf-label lbl-now">현황</div><div class="sf-val">품절 4 · 저재고 6</div><div class="sf-desc">품절 4개, 저재고 6개이며 평균 SR 30.2%로 사이즈 가용성도 함께 흔들립니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-why">원인</div><div class="sf-val">발주점 미반영</div><div class="sf-desc">공급 리드타임 변동, 시즌 전환, SKU별 판매속도, 사이즈 단절이 발주점에 충분히 반영되지 않았습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-so">결과</div><div class="sf-val">매출 방어 우선</div><div class="sf-desc">보충 큐를 위험도 순으로 재정렬하면 한정된 입고 물량을 매출 방어에 먼저 쓸 수 있습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-act">액션</div><div class="sf-val">Top 8 + SS 9,616개</div><div class="sf-desc">BTM-001부터 위험 점수 상위 8개 SKU를 보충 큐로 분리하고, 95% 안전재고 부족분 9,616개를 발주 검토 상한으로 둡니다.</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 1</span><span class="dash-step-hdr-label">재고 현황 — 지금 재고 상태가 어떤가?</span></div>
+    <div class="dash-kpi-row">
+      <div class="dk-box"><div class="dk-lbl">DOS 평균 (재고일수)</div><div class="dk-val">11.4일</div><div class="dk-delta warn">중앙값 7.2일 — 부족 편향</div></div>
+      <div class="dk-box"><div class="dk-lbl">재고회전율 (연환산)</div><div class="dk-val">39.8회</div><div class="dk-delta up">목표 ≥4회 — 매우 빠름</div></div>
+      <div class="dk-box"><div class="dk-lbl">서비스율 (품절 없는 SKU)</div><div class="dk-val">81.8%</div><div class="dk-delta dn">목표 95% — 위험 SKU 10개</div></div>
+      <div class="dk-box"><div class="dk-lbl">과잉재고 SKU 수</div><div class="dk-val">1개</div><div class="dk-delta up">22개 중 1개만 — 양호</div></div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 2</span><span class="dash-step-hdr-label">원인 확인 — 어떤 SKU·카테고리가 과잉/부족을 만드는가?</span></div>
+    <div class="dash-charts three-eq">
+      <div class="chart-card">
+        <div class="cc-title">ABC 분류 — 상위 20% SKU가 전체 출고의 몇 %를 차지하는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="inv-low-stock-priority" data-source="01b_inventory_health.csv + 01a_sales_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="저재고 SKU 보충 우선순위">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">저재고 SKU 보충 우선순위</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">BTM-001</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">3606.3점</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">SHO-002</text>
+<rect x="148" y="72" width="258.3" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="414.3" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">2388.9점</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">BTM-003</text>
+<rect x="148" y="96" width="226.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="382.0" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">2089.5점</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">TOP-003</text>
+<rect x="148" y="120" width="225.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="381.4" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">2084.7점</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">ACC-001</text>
+<rect x="148" y="144" width="87.0" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="243.0" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">804.3점</text>
+<text x="138.0" y="180.0" text-anchor="end" font-size="10" fill="#766c63">ACC-002</text>
+<rect x="148" y="168" width="61.1" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="217.1" y="180.0" text-anchor="start" font-size="10" fill="#2f2b27">564.7점</text>
+<text x="138.0" y="204.0" text-anchor="end" font-size="10" fill="#766c63">NEW-002</text>
+<rect x="148" y="192" width="58.8" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="214.8" y="204.0" text-anchor="start" font-size="10" fill="#2f2b27">543.3점</text>
+<text x="138.0" y="228.0" text-anchor="end" font-size="10" fill="#766c63">NEW-003</text>
+<rect x="148" y="216" width="23.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="179.4" y="228.0" text-anchor="start" font-size="10" fill="#2f2b27">216.1점</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">선행 지표 vs 결과 지표 — 역비례 패턴이 있는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="inv-supplier-otif-context" data-source="01d_leadtime_summary.csv" viewBox="0 0 620 260" role="img" aria-label="공급 OTIF가 재고 리스크에 주는 압력">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">공급 OTIF가 재고 리스크에 주는 압력</text>
+<line x1="62" y1="202" x2="596" y2="202" stroke="rgba(96,79,67,.18)"/>
+<rect x="62.0" y="155.0" width="42" height="47.0" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="83.0" y="149.0" text-anchor="middle" font-size="9" fill="#766c63">29%</text>
+<text x="83.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">업체_D</text>
+<rect x="120.0" y="118.4" width="42" height="83.6" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="141.0" y="112.4" text-anchor="middle" font-size="9" fill="#766c63">52%</text>
+<text x="141.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">업체_B</text>
+<rect x="178.0" y="101.3" width="42" height="100.7" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="199.0" y="95.3" text-anchor="middle" font-size="9" fill="#766c63">63%</text>
+<text x="199.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">업체_C</text>
+<rect x="236.0" y="95.4" width="42" height="106.6" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="257.0" y="89.4" text-anchor="middle" font-size="9" fill="#766c63">67%</text>
+<text x="257.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">업체_A</text>
+<rect x="294.0" y="67.0" width="42" height="135.0" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="315.0" y="61.0" text-anchor="middle" font-size="9" fill="#766c63">84%</text>
+<text x="315.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">업체_E</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">차원별 분포 — 특정 차원에 집중이 있는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="inv-abc-risk" data-source="01b_inventory_health.csv + 01a_sales_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="ABC 등급 x 재고상태">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">ABC 등급 x 재고상태</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">A-healthy</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">4.0개</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">A-low_stock</text>
+<rect x="148" y="72" width="292.5" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="448.5" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">3.0개</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">A-stockout</text>
+<rect x="148" y="96" width="292.5" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="448.5" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">3.0개</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">A-excess</text>
+<rect x="148" y="120" width="97.5" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="253.5" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">1.0개</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">B-healthy</text>
+<rect x="148" y="144" width="390.0" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="546.0" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">4.0개</text>
+<text x="138.0" y="180.0" text-anchor="end" font-size="10" fill="#766c63">B-low_stock</text>
+<rect x="148" y="168" width="97.5" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="253.5" y="180.0" text-anchor="start" font-size="10" fill="#2f2b27">1.0개</text>
+<text x="138.0" y="204.0" text-anchor="end" font-size="10" fill="#766c63">B-stockout</text>
+<rect x="148" y="192" width="97.5" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="253.5" y="204.0" text-anchor="start" font-size="10" fill="#2f2b27">1.0개</text>
+<text x="138.0" y="228.0" text-anchor="end" font-size="10" fill="#766c63">C-healthy</text>
+<rect x="148" y="216" width="292.5" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="448.5" y="228.0" text-anchor="start" font-size="10" fill="#2f2b27">3.0개</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-charts three-eq">
+      <div class="chart-card">
+        <div class="cc-title">DOS 분포 — 과잉·정상·부족 SKU가 각각 몇 개인가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="inv-dos-distribution" data-source="01b_inventory_health.csv" viewBox="0 0 620 260" role="img" aria-label="DOS 구간별 SKU 분포">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">DOS 구간별 SKU 분포</text>
+<line x1="62" y1="202" x2="596" y2="202" stroke="rgba(96,79,67,.18)"/>
+<rect x="62.0" y="134.5" width="42" height="67.5" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="83.0" y="128.5" text-anchor="middle" font-size="9" fill="#766c63">4개</text>
+<text x="83.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">0</text>
+<rect x="120.0" y="100.8" width="42" height="101.2" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="141.0" y="94.8" text-anchor="middle" font-size="9" fill="#766c63">6개</text>
+<text x="141.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">&lt;7</text>
+<rect x="178.0" y="67.0" width="42" height="135.0" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="199.0" y="61.0" text-anchor="middle" font-size="9" fill="#766c63">8개</text>
+<text x="199.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">7-14</text>
+<rect x="236.0" y="168.2" width="42" height="33.8" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="257.0" y="162.2" text-anchor="middle" font-size="9" fill="#766c63">2개</text>
+<text x="257.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">14-30</text>
+<rect x="294.0" y="185.1" width="42" height="16.9" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="315.0" y="179.1" text-anchor="middle" font-size="9" fill="#766c63">1개</text>
+<text x="315.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">30-60</text>
+<rect x="352.0" y="185.1" width="42" height="16.9" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="373.0" y="179.1" text-anchor="middle" font-size="9" fill="#766c63">1개</text>
+<text x="373.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">60+</text>
+</svg>
+        <details class="drill-details">
+          <summary>저재고/품절 SKU 상세 — 보충 우선순위 Top 10</summary>
+          <table class="drill-tbl">
+            <tr><th>SKU</th><th>ABC등급</th><th>DOS(일)</th><th>재고수량</th><th>일평균출고</th><th>판정</th></tr>
+            <tr><td>BTM-001</td><td>A</td><td>0.0</td><td>0</td><td>500.9</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>SHO-002</td><td>A</td><td>0.0</td><td>15</td><td>328.3</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>ACC-001</td><td>A</td><td>0.0</td><td>0</td><td>100.6</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>ACC-002</td><td>B</td><td>0.0</td><td>0</td><td>66.4</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>BTM-003</td><td>B</td><td>1.0</td><td>328</td><td>333.1</td><td><span class="tag-warn">부족(&lt;7일)</span></td></tr>
+            <tr><td>TOP-003</td><td>A</td><td>1.0</td><td>330</td><td>333.8</td><td><span class="tag-warn">부족(&lt;7일)</span></td></tr>
+            <tr><td>NEW-002</td><td>C</td><td>5.6</td><td>1,944</td><td>349.2</td><td><span class="tag-warn">부족(&lt;7일)</span></td></tr>
+            <tr><td>NEW-003</td><td>C</td><td>6.4</td><td>1,637</td><td>254.2</td><td><span class="tag-warn">부족(&lt;7일)</span></td></tr>
+            <tr><td>TOP-004</td><td>A</td><td>6.7</td><td>2,183</td><td>327.0</td><td><span class="tag-warn">부족(&lt;7일)</span></td></tr>
+            <tr><td>KNT-002</td><td>A</td><td>6.9</td><td>1,833</td><td>264.0</td><td><span class="tag-warn">부족(&lt;7일)</span></td></tr>
+          </table>
+        </details>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">카테고리별 재고회전율 — 어떤 카테고리가 재고를 막고 있는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="inv-turnover-priority" data-source="01b_inventory_health.csv" viewBox="0 0 620 280" role="img" aria-label="재고회전율 상위 SKU">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">재고회전율 상위 SKU</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">BTM-001</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">432.7x</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">ACC-001</text>
+<rect x="148" y="72" width="110.1" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="266.1" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">122.2x</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">BTM-004</text>
+<rect x="148" y="96" width="26.8" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="182.8" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">29.7x</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">BTM-002</text>
+<rect x="148" y="120" width="24.2" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="180.2" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">26.8x</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">OUT-003</text>
+<rect x="148" y="144" width="22.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="178.4" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">24.8x</text>
+<text x="138.0" y="180.0" text-anchor="end" font-size="10" fill="#766c63">SHO-001</text>
+<rect x="148" y="168" width="21.1" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="177.1" y="180.0" text-anchor="start" font-size="10" fill="#2f2b27">23.5x</text>
+<text x="138.0" y="204.0" text-anchor="end" font-size="10" fill="#766c63">NEW-002</text>
+<rect x="148" y="192" width="20.8" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="176.8" y="204.0" text-anchor="start" font-size="10" fill="#2f2b27">23.1x</text>
+<text x="138.0" y="228.0" text-anchor="end" font-size="10" fill="#766c63">BTM-003</text>
+<rect x="148" y="216" width="16.9" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="172.9" y="228.0" text-anchor="start" font-size="10" fill="#2f2b27">18.8x</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">매출 기여 상위 SKU — Pareto 분포 (24개월 누계)</div>
+        <div class="cc-desc">매출 상위 SKU가 결품·과잉 양쪽에서 가장 큰 영향. BTM-001은 매출 1위인데 현재 품절.</div>
+        <svg class="chart-svg" data-chart-id="inv-revenue-pareto" data-source="01a_sales_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="매출 기여 상위 SKU">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">매출 기여 상위 SKU</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">BTM-001</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">200.0억</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">OUT-001</text>
+<rect x="148" y="72" width="307.6" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="463.6" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">157.8억</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">TOP-003</text>
+<rect x="148" y="96" width="294.4" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="450.4" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">151.0억</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">OUT-002</text>
+<rect x="148" y="120" width="287.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="443.4" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">147.4억</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">TOP-004</text>
+<rect x="148" y="144" width="265.8" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="421.8" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">136.3억</text>
+<text x="138.0" y="180.0" text-anchor="end" font-size="10" fill="#766c63">KNT-002</text>
+<rect x="148" y="168" width="243.0" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="399.0" y="180.0" text-anchor="start" font-size="10" fill="#2f2b27">124.6억</text>
+<text x="138.0" y="204.0" text-anchor="end" font-size="10" fill="#766c63">SHO-002</text>
+<rect x="148" y="192" width="239.6" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="395.6" y="204.0" text-anchor="start" font-size="10" fill="#2f2b27">122.9억</text>
+<text x="138.0" y="228.0" text-anchor="end" font-size="10" fill="#766c63">KNT-001</text>
+<rect x="148" y="216" width="220.7" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="376.7" y="228.0" text-anchor="start" font-size="10" fill="#2f2b27">113.2억</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-charts">
+      <div class="chart-card">
+        <div class="cc-title">시즌별 출고량 — FW가 SS 대비 1.35배 (재고 정책에 시즌 가중 필요)</div>
+        <div class="cc-desc">FW 1,681,853개 vs SS 1,249,412개. FW 시즌 진입 직전 안전재고 상향이 필수.</div>
+        <svg class="chart-svg" data-chart-id="inv-season-sales" data-source="01a_sales_monthly.csv" viewBox="0 0 620 260" role="img" aria-label="시즌별 출고량">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">시즌별 출고량</text>
+<line x1="62" y1="202" x2="596" y2="202" stroke="rgba(96,79,67,.18)"/>
+<rect x="62.0" y="67.0" width="42" height="135.0" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="83.0" y="61.0" text-anchor="middle" font-size="9" fill="#766c63">1681853개</text>
+<text x="83.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">FW</text>
+<rect x="120.0" y="101.7" width="42" height="100.3" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="141.0" y="95.7" text-anchor="middle" font-size="9" fill="#766c63">1249412개</text>
+<text x="141.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">SS</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">SKU별 재고 건전성 — 발주 조정이 필요한 SKU는?</div>
+        <div class="cc-desc">저재고 Top 10. DOS·재고량·일출고를 같이 보고 보충 큐 우선순위를 결정합니다.</div>
+        <table class="pp-tbl">
+          <thead><tr><th>SKU</th><th>ABC</th><th>DOS(일)</th><th>재고수량</th><th>일평균출고</th><th>판정</th></tr></thead>
+          <tbody>
+            <tr><td>BTM-001</td><td>A</td><td>0.0</td><td>0</td><td>500.9</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>SHO-002</td><td>A</td><td>0.0</td><td>15</td><td>328.3</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>ACC-001</td><td>A</td><td>0.0</td><td>0</td><td>100.6</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>ACC-002</td><td>B</td><td>0.0</td><td>0</td><td>66.4</td><td><span class="tag-bad">품절</span></td></tr>
+            <tr><td>BTM-003</td><td>B</td><td>1.0</td><td>328</td><td>333.1</td><td><span class="tag-warn">부족</span></td></tr>
+            <tr><td>TOP-003</td><td>A</td><td>1.0</td><td>330</td><td>333.8</td><td><span class="tag-warn">부족</span></td></tr>
+            <tr><td>NEW-002</td><td>C</td><td>5.6</td><td>1,944</td><td>349.2</td><td><span class="tag-warn">부족</span></td></tr>
+            <tr><td>NEW-003</td><td>C</td><td>6.4</td><td>1,637</td><td>254.2</td><td><span class="tag-warn">부족</span></td></tr>
+            <tr><td>TOP-004</td><td>A</td><td>6.7</td><td>2,183</td><td>327.0</td><td><span class="tag-warn">부족</span></td></tr>
+            <tr><td>KNT-002</td><td>A</td><td>6.9</td><td>1,833</td><td>264.0</td><td><span class="tag-warn">부족</span></td></tr>
+          </tbody>
+        </table>
+        <div class="highlight-box warn">BTM-001부터 위험 점수 상위 8개 SKU를 보충 큐로 분리하고, 95% 안전재고 부족분 9,616개를 발주 검토 상한으로 둡니다.</div>
+      </div>
+    </div>
+
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">월별 출고량 추이 — FW(11~12월) 피크가 매년 반복되는 구조적 패턴</div>
+        <div class="cc-desc">2024-12 138,532 / 2025-12 157,765 — 12월 출고가 1월 대비 +20% 수준. 발주 타이밍이 핵심.</div>
+        <svg class="chart-svg" data-chart-id="inv-monthly-sales-trend" data-source="01a_sales_monthly.csv" viewBox="0 0 620 260" role="img" aria-label="월별 출고량 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">월별 출고량 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,82.8 77.6,112.4 101.1,104.9 124.7,100.3 148.3,103.5 171.8,95.7 195.4,134.7 219.0,137.8 242.5,74.7 266.1,58.7 289.7,71.0 313.2,50.1 336.8,88.7 360.3,115.6 383.9,97.2 407.5,86.1 431.0,89.4 454.6,81.3 478.2,125.0 501.7,131.7 525.3,56.5 548.9,61.0 572.4,68.3 596.0,38.0" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="82.8" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="74.8" text-anchor="middle" font-size="9" fill="#766c63">130010.0</text>
+<circle cx="148.3" cy="103.5" r="3.5" fill="#4fb799"/>
+<text x="148.3" y="95.5" text-anchor="middle" font-size="9" fill="#766c63">108141.0</text>
+<circle cx="242.5" cy="74.7" r="3.5" fill="#4fb799"/>
+<text x="242.5" y="66.7" text-anchor="middle" font-size="9" fill="#766c63">138532.0</text>
+<circle cx="336.8" cy="88.7" r="3.5" fill="#4fb799"/>
+<text x="336.8" y="80.7" text-anchor="middle" font-size="9" fill="#766c63">123710.0</text>
+<circle cx="431.0" cy="89.4" r="3.5" fill="#4fb799"/>
+<text x="431.0" y="81.4" text-anchor="middle" font-size="9" fill="#766c63">123014.0</text>
+<circle cx="525.3" cy="56.5" r="3.5" fill="#4fb799"/>
+<text x="525.3" y="48.5" text-anchor="middle" font-size="9" fill="#766c63">157765.0</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">2024-01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">2025-12</text>
+</svg>
+      </div>
+    </div>
+
+    <!-- v2.0: 안전재고 비교 바 (Z×σ×√L) -->
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">안전재고 — 현재 보유 vs 통계 기반 적정값 (Z×σ×√L · 서비스 레벨 3단계)</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="inv-service-simulation" data-source="01b_inventory_health.csv" viewBox="0 0 620 260" role="img" aria-label="서비스율 개선 목표">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">서비스율 개선 목표</text>
+<line x1="62" y1="202" x2="596" y2="202" stroke="rgba(96,79,67,.18)"/>
+<rect x="62.0" y="89.3" width="42" height="112.7" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="83.0" y="83.3" text-anchor="middle" font-size="9" fill="#766c63">82%</text>
+<text x="83.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">현재</text>
+<rect x="120.0" y="71.1" width="42" height="130.9" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="141.0" y="65.1" text-anchor="middle" font-size="9" fill="#766c63">95%</text>
+<text x="141.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">목표</text>
+<rect x="178.0" y="67.0" width="42" height="135.0" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="199.0" y="61.0" text-anchor="middle" font-size="9" fill="#766c63">98%</text>
+<text x="199.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">상한</text>
+</svg>
+        <details class="drill-details">
+          <summary>서비스레벨별 안전재고 상세 (Z×σ×√L 공식 · 22 SKU 합계)</summary>
+          <table class="drill-tbl">
+            <tr><th>서비스레벨</th><th>Z값</th><th>평균 σ (개/일)</th><th>평균 L (일)</th><th>적정 SS 합계 (개)</th><th>현재 대비</th></tr>
+            <tr><td>현재 (≈81.8%)</td><td>0.91</td><td>165.7</td><td>18.1</td><td>15,996</td><td>—</td></tr>
+            <tr><td>90%</td><td>1.28</td><td>165.7</td><td>18.1</td><td>19,869</td><td><span class="tag-warn">+3,873</span></td></tr>
+            <tr><td>95% (목표)</td><td>1.65</td><td>165.7</td><td>18.1</td><td>25,612</td><td><span class="tag-warn">+9,616</span></td></tr>
+            <tr><td>99% (상한)</td><td>2.33</td><td>165.7</td><td>18.1</td><td>36,170</td><td><span class="tag-bad">+20,174</span></td></tr>
+          </table>
+        </details>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 3</span><span class="dash-step-hdr-label">시뮬레이션 — 변수를 바꾸면 결과가 어떻게 달라지나?</span></div>
+    <div class="sim-widget">
+      <div class="sim-title">핵심 변수 시뮬레이터 <span class="sim-badge">인터랙티브</span></div>
+      <div class="sim-note">위험 SKU 보충 범위를 늘릴 때 서비스율과 과잉 위험이 어떻게 바뀌는지 봅니다.</div>
+      <div class="sim-slider-row">
+        <div class="sim-slider-label"><span class="sim-label">보충 커버리지</span><span class="sim-range-val" id="sim-a-val">—</span></div>
+        <input type="range" class="sim-range" id="sim-a" min="0" max="100" step="1" value="50" oninput="updateSimA(this)" style="background:linear-gradient(to right,#4fb799 50%,rgba(96,79,67,.15) 50%)">
+      </div>
+      <div class="sim-results">
+        <div class="sim-res"><div class="sim-res-val" id="sim-a-r1">—</div><div class="sim-res-lbl">예상 서비스율</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-a-r2">—</div><div class="sim-res-lbl">추가 보충 수량</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-a-r3">—</div><div class="sim-res-lbl">과잉 리스크</div></div>
+      </div>
+    </div>
+    <div class="sim-widget" style="background:rgba(237,231,245,.7);border-color:rgba(91,107,191,.25)">
+      <div class="sim-title">시나리오 비교 <span class="sim-badge" style="background:rgba(91,107,191,.12);color:#3b5bbf;border-color:rgba(91,107,191,.2)">시나리오</span></div>
+      <div class="sim-note">SLA/예측/비용 시나리오 비교</div>
+      <div class="sim-scenario-row">
+        <div class="sim-scenario-btn active" onclick="selectScenario(this,'sc-a')">보수적<div style="font-size:10px;color:var(--mu);font-weight:400;margin-top:3px">현상 유지 + 소폭 조정</div></div>
+        <div class="sim-scenario-btn" onclick="selectScenario(this,'sc-b')">기본<div style="font-size:10px;color:var(--mu);font-weight:400;margin-top:3px">권장 액션 적용</div></div>
+        <div class="sim-scenario-btn" onclick="selectScenario(this,'sc-c')">공격적<div style="font-size:10px;color:var(--mu);font-weight:400;margin-top:3px">전면 개편 시나리오</div></div>
+      </div>
+      <div class="sim-results">
+        <div class="sim-res"><div class="sim-res-val" id="sc-r1">—</div><div class="sim-res-lbl">서비스율</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sc-r2">—</div><div class="sim-res-lbl">비용영향</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sc-r3">—</div><div class="sim-res-lbl">우선순위</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">ACTION</span><span class="dash-step-hdr-label">즉각 실행 가능한 개선 과제</span></div>
+    <div class="dash-actions">
+      <div class="da-item"><div class="da-p">P1 — 즉시</div><div class="da-title">P1: 품절 SKU와 A/B등급 저재고·SR&lt;50% SKU를 즉시 보충 큐 최상단으로 올림</div><div class="da-why">품절 SKU와 사이즈 깨짐을 먼저 줄여 서비스율을 높이면서 과잉 보충을 막습니다.</div></div>
+      <div class="da-item"><div class="da-p">P2 — 2~4주 내</div><div class="da-title">P2: 안전재고 95% 기준 부족분을 다음 발주량 상한으로 사용</div><div class="da-why">DOS가 7일 미만이고 abc_class가 A/B이거나 SR&lt;50%인 SKU를 먼저 보충합니다.</div></div>
+      <div class="da-item"><div class="da-p">P3 — 모니터링</div><div class="da-title">P3: 과잉 후보 SKU는 신규 발주 보류 및 소진 채널 지정</div><div class="da-why">DOS가 7일 미만이고 abc_class가 A/B이거나 SR&lt;50%인 SKU를 먼저 보충합니다.</div></div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /panel-0 -->
+
+
+<!-- ══════════════════════════════════════════
+  PANEL 1 — 수요예측
+════════════════════════════════════════════ -->
+<div class="dash-panel" id="panel-1">
+<div class="dash">
+  <div class="dash-topbar">
+    <div class="dash-topbar-left">
+      <div class="dash-topbar-title">수요예측 — <em>Demand Forecast · MAPE · Bias Analysis</em></div>
+      <div class="dash-topbar-problem"><strong>Business Question</strong> FW 시즌 맥락: 예측 품질은 평균 MAPE가 아니라 FW/SS 시즌 차이와 Look-alike 신상품 분리 여부로 판단해야 합니다. 질문: SS/FW 예측 차이와 Look-alike 신상품을 반영하면 어떤 SKU forecast override가 필요한가?</div>
+    </div>
+    <span class="dash-topbar-meta">2024-01 ~ 2025-12</span>
+  </div>
+  <div class="dash-body">
+
+    <div class="ai-trace">
+      <svg class="ai-trace-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="#3d4fa0" stroke-width="1.2"/><path d="M10 6v5l3 2" stroke="#3d4fa0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="ai-trace-body">
+        <div class="ai-trace-label">AI Reasoning Trace — 수요예측</div>
+        <div class="ai-trace-text">수요예측 trace · 시즌 분리(FW/SS) + Look-alike 3개 · 근거: 전체 MAPE 10.4%; FW MAPE 13.6% vs SS MAPE 7.3% (1.9배 격차); FW 과소예측 비율 97.5%; 1순위 override SKU = NEW-003 (C등급 신상품, 전체 MAPE 14.6%, FW 21.7%)</div>
+      </div>
+    </div>
+
+    <div class="story-block">
+      <div class="story-flow">
+        <div class="sf-cell"><div class="sf-label lbl-now">현황</div><div class="sf-val">FW MAPE 13.6%</div><div class="sf-desc">전체 MAPE 10.4% 안에 FW MAPE 13.6%, SS MAPE 7.3%의 시즌 차이가 숨어 있습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-why">원인</div><div class="sf-val">신상품 분리 부재</div><div class="sf-desc">신상품과 시즌 전환 SKU가 같은 이동평균/예측 기준으로 처리되고 있고, Look-alike 기준이 발주 검토에 노출되지 않습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-so">결과</div><div class="sf-val">시즌·신상품 분리</div><div class="sf-desc">시즌·신상품을 분리 보정하면 전체 모델 교체 없이도 재고 위험을 빠르게 낮출 수 있습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-act">액션</div><div class="sf-val">Override 8 + LA 3</div><div class="sf-desc">NEW-003 등 MAPE 상위 8개 SKU와 Look-alike 대상 3개를 다음 발주 전 forecast override 검토 대상으로 지정합니다.</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 1</span><span class="dash-step-hdr-label">예측 현황 — 지금 예측이 얼마나 빗나가고 있는가?</span></div>
+    <div class="dash-kpi-row">
+      <div class="dk-box"><div class="dk-lbl">MAPE (예측 오차율)</div><div class="dk-val">10.4%</div><div class="dk-delta dn">상위 오차 SKU override</div></div>
+      <div class="dk-box"><div class="dk-lbl">Bias (예측 편향)</div><div class="dk-val">-10.4%</div><div class="dk-delta warn">과대/과소 방향 분리</div></div>
+      <div class="dk-box"><div class="dk-lbl">예측 정확 SKU 비율</div><div class="dk-val">66.8%</div><div class="dk-delta up">20% 이하 SKU 비중</div></div>
+      <div class="dk-box"><div class="dk-lbl">과대예측율</div><div class="dk-val">1.9%</div><div class="dk-delta warn">과대예측 SKU 발주 보정</div></div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 2</span><span class="dash-step-hdr-label">원인 확인 — 어떤 SKU·시즌에서 예측이 특히 어긋나는가?</span></div>
+    <div class="dash-charts">
+      <div class="chart-card">
+        <div class="cc-title">월별 MAPE 추이 — FW 시즌(6월·12월)에 22%로 급등하는 시즌 패턴</div>
+        <div class="cc-desc">SS 평균 7.3% / FW 평균 13.6%. 시즌 전환 월에 MAPE 급등 → FW용 별도 모델 또는 override 필요.</div>
+        <svg class="chart-svg" data-chart-id="forecast-mape-trend" data-source="01e_forecast_base.csv" viewBox="0 0 620 260" role="img" aria-label="월별 MAPE 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">월별 MAPE 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,190.6 77.6,188.5 101.1,188.8 124.7,190.3 148.3,187.4 171.8,38.5 195.4,185.2 219.0,183.6 242.5,71.3 266.1,71.3 289.7,191.7 313.2,42.4 336.8,189.7 360.3,188.6 383.9,189.0 407.5,188.2 431.0,188.4 454.6,38.0 478.2,183.7 501.7,183.9 525.3,69.3 548.9,68.4 572.4,189.8 596.0,39.9" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="190.6" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="182.6" text-anchor="middle" font-size="9" fill="#766c63">2.5%</text>
+<circle cx="148.3" cy="187.4" r="3.5" fill="#4fb799"/>
+<text x="148.3" y="179.4" text-anchor="middle" font-size="9" fill="#766c63">3.1%</text>
+<circle cx="242.5" cy="71.3" r="3.5" fill="#4fb799"/>
+<text x="242.5" y="63.3" text-anchor="middle" font-size="9" fill="#766c63">22.2%</text>
+<circle cx="336.8" cy="189.7" r="3.5" fill="#4fb799"/>
+<text x="336.8" y="181.7" text-anchor="middle" font-size="9" fill="#766c63">2.7%</text>
+<circle cx="431.0" cy="188.4" r="3.5" fill="#4fb799"/>
+<text x="431.0" y="180.4" text-anchor="middle" font-size="9" fill="#766c63">2.9%</text>
+<circle cx="525.3" cy="69.3" r="3.5" fill="#4fb799"/>
+<text x="525.3" y="61.3" text-anchor="middle" font-size="9" fill="#766c63">22.6%</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">12</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">실제 출고량 월별 추이 — FW 피크 시점에 예측이 따라가지 못함</div>
+        <div class="cc-desc">FW 12월 138K~158K vs 예측 110K~120K 수준. 과소예측 비율 97.5%로 일관된 편향.</div>
+        <svg class="chart-svg" data-chart-id="forecast-actual-vs-forecast" data-source="01e_forecast_base.csv" viewBox="0 0 620 260" role="img" aria-label="실제 출고량 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">실제 출고량 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,82.8 77.6,112.4 101.1,104.9 124.7,100.3 148.3,103.5 171.8,95.7 195.4,134.7 219.0,137.8 242.5,74.7 266.1,58.7 289.7,71.0 313.2,50.1 336.8,88.7 360.3,115.6 383.9,97.2 407.5,86.1 431.0,89.4 454.6,81.3 478.2,125.0 501.7,131.7 525.3,56.5 548.9,61.0 572.4,68.3 596.0,38.0" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="82.8" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="74.8" text-anchor="middle" font-size="9" fill="#766c63">130010.0</text>
+<circle cx="148.3" cy="103.5" r="3.5" fill="#4fb799"/>
+<text x="148.3" y="95.5" text-anchor="middle" font-size="9" fill="#766c63">108141.0</text>
+<circle cx="242.5" cy="74.7" r="3.5" fill="#4fb799"/>
+<text x="242.5" y="66.7" text-anchor="middle" font-size="9" fill="#766c63">138532.0</text>
+<circle cx="336.8" cy="88.7" r="3.5" fill="#4fb799"/>
+<text x="336.8" y="80.7" text-anchor="middle" font-size="9" fill="#766c63">123710.0</text>
+<circle cx="431.0" cy="89.4" r="3.5" fill="#4fb799"/>
+<text x="431.0" y="81.4" text-anchor="middle" font-size="9" fill="#766c63">123014.0</text>
+<circle cx="525.3" cy="56.5" r="3.5" fill="#4fb799"/>
+<text x="525.3" y="48.5" text-anchor="middle" font-size="9" fill="#766c63">157765.0</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">2024-01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">2025-12</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-charts three-eq">
+      <div class="chart-card">
+        <div class="cc-title">MAPE 임계 초과월 — 12% 게이트를 넘긴 6개월 (모두 FW 시즌)</div>
+        <div class="cc-desc">22% 수준의 spike가 6번 발생. 6월·12월 시즌 전환기에 집중 — 캘린더 기반 자동 게이트 필요.</div>
+        <svg class="chart-svg" data-chart-id="forecast-mape-trend-detail" data-source="01e_forecast_base.csv" viewBox="0 0 620 260" role="img" aria-label="MAPE 의사결정 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">MAPE 의사결정 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,190.6 77.6,188.5 101.1,188.8 124.7,190.3 148.3,187.4 171.8,38.5 195.4,185.2 219.0,183.6 242.5,71.3 266.1,71.3 289.7,191.7 313.2,42.4 336.8,189.7 360.3,188.6 383.9,189.0 407.5,188.2 431.0,188.4 454.6,38.0 478.2,183.7 501.7,183.9 525.3,69.3 548.9,68.4 572.4,189.8 596.0,39.9" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="190.6" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="182.6" text-anchor="middle" font-size="9" fill="#766c63">2.5%</text>
+<circle cx="148.3" cy="187.4" r="3.5" fill="#4fb799"/>
+<text x="148.3" y="179.4" text-anchor="middle" font-size="9" fill="#766c63">3.1%</text>
+<circle cx="242.5" cy="71.3" r="3.5" fill="#4fb799"/>
+<text x="242.5" y="63.3" text-anchor="middle" font-size="9" fill="#766c63">22.2%</text>
+<circle cx="336.8" cy="189.7" r="3.5" fill="#4fb799"/>
+<text x="336.8" y="181.7" text-anchor="middle" font-size="9" fill="#766c63">2.7%</text>
+<circle cx="431.0" cy="188.4" r="3.5" fill="#4fb799"/>
+<text x="431.0" y="180.4" text-anchor="middle" font-size="9" fill="#766c63">2.9%</text>
+<circle cx="525.3" cy="69.3" r="3.5" fill="#4fb799"/>
+<text x="525.3" y="61.3" text-anchor="middle" font-size="9" fill="#766c63">22.6%</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">12</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">분포 — 극단값의 원인 그룹이 있는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="forecast-error-distribution" data-source="01e_forecast_base.csv" viewBox="0 0 620 260" role="img" aria-label="SKU별 MAPE 분포">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">SKU별 MAPE 분포</text>
+<line x1="62" y1="202" x2="596" y2="202" stroke="rgba(96,79,67,.18)"/>
+<rect x="62.0" y="202.0" width="42" height="0.0" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="83.0" y="196.0" text-anchor="middle" font-size="9" fill="#766c63">0개</text>
+<text x="83.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">0-5</text>
+<rect x="120.0" y="124.9" width="42" height="77.1" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="141.0" y="118.9" text-anchor="middle" font-size="9" fill="#766c63">8개</text>
+<text x="141.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">5-10</text>
+<rect x="178.0" y="67.0" width="42" height="135.0" rx="5" fill="rgba(239,125,134,.68)"/>
+<text x="199.0" y="61.0" text-anchor="middle" font-size="9" fill="#766c63">14개</text>
+<text x="199.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">10-20</text>
+<rect x="236.0" y="202.0" width="42" height="0.0" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="257.0" y="196.0" text-anchor="middle" font-size="9" fill="#766c63">0개</text>
+<text x="257.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">20-40</text>
+<rect x="294.0" y="202.0" width="42" height="0.0" rx="5" fill="rgba(79,183,153,.58)"/>
+<text x="315.0" y="196.0" text-anchor="middle" font-size="9" fill="#766c63">0개</text>
+<text x="315.0" y="224.0" text-anchor="middle" font-size="9" fill="#766c63">40+</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">기여도 분해 — 변화의 몇 %가 어디서 왔는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="forecast-sku-errors" data-source="01e_forecast_base.csv + 01a_sales_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="예측오차 상위 SKU">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">예측오차 상위 SKU</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">NEW-003</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">14.6%</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">OUT-003</text>
+<rect x="148" y="72" width="359.7" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="515.7" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">13.5%</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">NEW-002</text>
+<rect x="148" y="96" width="345.1" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="501.1" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">12.9%</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">BTM-004</text>
+<rect x="148" y="120" width="321.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="477.4" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">12.0%</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">NEW-001</text>
+<rect x="148" y="144" width="308.9" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="464.9" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">11.6%</text>
+<text x="138.0" y="180.0" text-anchor="end" font-size="10" fill="#766c63">BTM-003</text>
+<rect x="148" y="168" width="304.9" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="460.9" y="180.0" text-anchor="start" font-size="10" fill="#2f2b27">11.4%</text>
+<text x="138.0" y="204.0" text-anchor="end" font-size="10" fill="#766c63">OUT-002</text>
+<rect x="148" y="192" width="301.6" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="457.6" y="204.0" text-anchor="start" font-size="10" fill="#2f2b27">11.3%</text>
+<text x="138.0" y="228.0" text-anchor="end" font-size="10" fill="#766c63">SHO-002</text>
+<rect x="148" y="216" width="298.6" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="454.6" y="228.0" text-anchor="start" font-size="10" fill="#2f2b27">11.2%</text>
+</svg>
+      </div>
+    </div>
+
+    <!-- v2.0: BIAS 방향성 추이 -->
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">BIAS 방향성 추이 — SS/FW 시즌별로 과대·과소 편향이 반복되는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="forecast-bias-trend" data-source="01e_forecast_base.csv" viewBox="0 0 620 260" role="img" aria-label="월별 Bias 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">월별 Bias 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,58.7 77.6,60.7 101.1,60.5 124.7,59.0 148.3,61.5 171.8,205.5 195.4,63.9 219.0,65.4 242.5,173.9 266.1,173.8 289.7,57.1 313.2,201.8 336.8,59.4 360.3,60.0 383.9,59.7 407.5,61.0 431.0,60.8 454.6,206.0 478.2,65.4 501.7,65.2 525.3,175.8 548.9,176.6 572.4,58.7 596.0,204.2" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="58.7" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="50.7" text-anchor="middle" font-size="9" fill="#766c63">-2.5%</text>
+<circle cx="148.3" cy="61.5" r="3.5" fill="#4fb799"/>
+<text x="148.3" y="53.5" text-anchor="middle" font-size="9" fill="#766c63">-3.0%</text>
+<circle cx="242.5" cy="173.9" r="3.5" fill="#4fb799"/>
+<text x="242.5" y="165.9" text-anchor="middle" font-size="9" fill="#766c63">-22.2%</text>
+<circle cx="336.8" cy="59.4" r="3.5" fill="#4fb799"/>
+<text x="336.8" y="51.4" text-anchor="middle" font-size="9" fill="#766c63">-2.7%</text>
+<circle cx="431.0" cy="60.8" r="3.5" fill="#4fb799"/>
+<text x="431.0" y="52.8" text-anchor="middle" font-size="9" fill="#766c63">-2.9%</text>
+<circle cx="525.3" cy="175.8" r="3.5" fill="#4fb799"/>
+<text x="525.3" y="167.8" text-anchor="middle" font-size="9" fill="#766c63">-22.6%</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">12</text>
+</svg>
+        <details class="drill-details">
+          <summary>BIAS 상위 SKU 상세 — FW/SS 시즌별 과소예측 패턴 (음수=과소예측)</summary>
+          <table class="drill-tbl">
+            <tr><th>SKU</th><th>ABC</th><th>전체 MAPE</th><th>FW MAPE</th><th>SS MAPE</th><th>BIAS</th><th>방향</th><th>발주 영향</th></tr>
+            <tr><td>NEW-003</td><td>C</td><td>14.6%</td><td>21.7%</td><td>9.0%</td><td>-14.6%</td><td><span class="tag-bad">과소예측</span></td><td>발주 부족 → 결품 위험</td></tr>
+            <tr><td>OUT-003</td><td>C</td><td>13.5%</td><td>17.7%</td><td>9.2%</td><td>-13.5%</td><td><span class="tag-bad">과소예측</span></td><td>발주 부족 → 결품 위험</td></tr>
+            <tr><td>NEW-002</td><td>C</td><td>12.9%</td><td>21.2%</td><td>7.4%</td><td>-12.9%</td><td><span class="tag-bad">과소예측</span></td><td>발주 부족 → 결품 위험</td></tr>
+            <tr><td>BTM-004</td><td>C</td><td>12.1%</td><td>16.4%</td><td>7.7%</td><td>-12.1%</td><td><span class="tag-bad">과소예측</span></td><td>발주 부족 → 결품 위험</td></tr>
+            <tr><td>NEW-001</td><td>C</td><td>11.6%</td><td>19.8%</td><td>6.1%</td><td>-11.6%</td><td><span class="tag-bad">과소예측</span></td><td>발주 부족 → 결품 위험</td></tr>
+            <tr><td>BTM-003</td><td>B</td><td>11.4%</td><td>13.1%</td><td>9.7%</td><td>-11.4%</td><td><span class="tag-warn">과소예측</span></td><td>FW 보정 필요</td></tr>
+            <tr><td>OUT-002</td><td>A</td><td>11.3%</td><td>13.1%</td><td>9.5%</td><td>-11.3%</td><td><span class="tag-warn">과소예측</span></td><td>A등급 — 우선 override</td></tr>
+            <tr><td>SHO-002</td><td>A</td><td>11.2%</td><td>13.1%</td><td>9.3%</td><td>-11.2%</td><td><span class="tag-warn">과소예측</span></td><td>A등급 — 우선 override</td></tr>
+          </table>
+        </details>
+      </div>
+    </div>
+
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">예측 요인 중요도 — 어떤 변수가 결과를 가장 많이 결정하는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="forecast-a-class-risk" data-source="01e_forecast_base.csv + 01a_sales_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="A등급 예측 리스크">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">A등급 예측 리스크</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">OUT-002</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">11.3%</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">SHO-002</text>
+<rect x="148" y="72" width="386.1" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="542.1" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">11.2%</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 3</span><span class="dash-step-hdr-label">예측 시뮬레이션</span></div>
+    <div class="sim-widget">
+      <div class="sim-title">예측 시뮬레이터 <span class="sim-badge">인터랙티브</span></div>
+      <div class="sim-note">MAPE 목표(5~15%)를 낮출 때 재고 리스크 감소 효과 추정 (현재 10.4%).</div>
+      <div class="sim-slider-row">
+        <div class="sim-slider-label"><span class="sim-label">MAPE 목표</span><span class="sim-range-val" id="sim-mape-val">10.4%</span></div>
+        <input type="range" class="sim-range" id="sim-mape" min="0" max="100" step="1" value="54" oninput="updateSimMape(this)">
+      </div>
+      <div class="sim-results">
+        <div class="sim-res"><div class="sim-res-val" id="sim-mape-r1">10.4%</div><div class="sim-res-lbl">예상 MAPE</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-mape-r2">-10.4%</div><div class="sim-res-lbl">Bias</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-mape-r3">8개</div><div class="sim-res-lbl">리스크 SKU</div></div>
+      </div>
+    </div>
+    <div class="sim-widget" style="background:rgba(225,241,236,.7);border-color:rgba(79,183,153,.3)">
+      <div class="sim-title">시나리오 기획 <span class="sim-badge" style="background:rgba(53,201,149,.12);color:#1a6b50;border-color:rgba(53,201,149,.25)">전략</span></div>
+      <div class="sim-note">예측 보정 방식별 결과 비교 (MAPE 10.4% → ?)</div>
+      <div class="sim-scenario-row">
+        <div class="sim-scenario-btn active" onclick="selectScenarioForecast(this,'a')">개입 없음<div style="font-size:10px;font-weight:400;color:var(--mu)">현상 유지</div></div>
+        <div class="sim-scenario-btn" onclick="selectScenarioForecast(this,'b')">부분 개입<div style="font-size:10px;font-weight:400;color:var(--mu)">A등급 + 신상품</div></div>
+        <div class="sim-scenario-btn" onclick="selectScenarioForecast(this,'c')">전체 개입<div style="font-size:10px;font-weight:400;color:var(--mu)">시즌 모델 분리</div></div>
+      </div>
+      <div class="sim-results">
+        <div class="sim-res"><div class="sim-res-val" id="dsc-r1">10.4%</div><div class="sim-res-lbl">MAPE</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="dsc-r2">기준</div><div class="sim-res-lbl">재고영향</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="dsc-r3">0개</div><div class="sim-res-lbl">적용대상</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">ACTION</span><span class="dash-step-hdr-label">즉각 실행 가능한 개선 과제</span></div>
+    <div class="dash-actions">
+      <div class="da-item"><div class="da-p">P1 — 즉시</div><div class="da-title">P1: MAPE 상위 SKU를 forecast override 리스트로 분리</div><div class="da-why">오차가 큰 SKU부터 보정해 저재고와 과잉 발주를 동시에 줄입니다.</div></div>
+      <div class="da-item"><div class="da-p">P2 — 2~4주</div><div class="da-title">P2: A등급 SKU는 월 단위가 아니라 주 단위 보정 검토</div><div class="da-why">MAPE가 높고 매출 기여가 큰 SKU, FW 과소예측 SKU, Look-alike 신상품을 먼저 보정합니다.</div></div>
+      <div class="da-item"><div class="da-p">P3 — 모니터링</div><div class="da-title">P3: 신규 SKU는 look-alike 기준과 일반 예측치를 분리 표시</div><div class="da-why">MAPE가 높고 매출 기여가 큰 SKU, FW 과소예측 SKU, Look-alike 신상품을 먼저 보정합니다.</div></div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /panel-1 -->
+
+
+<!-- ══════════════════════════════════════════
+  PANEL 2 — 리드타임 안정성
+════════════════════════════════════════════ -->
+<div class="dash-panel" id="panel-2">
+<div class="dash">
+  <div class="dash-topbar">
+    <div class="dash-topbar-left">
+      <div class="dash-topbar-title">리드타임 안정성 — <em>OTIF · Lead Time CV · Supplier Risk</em></div>
+      <div class="dash-topbar-problem"><strong>Business Question</strong> FW 시즌 맥락: 업체_D 개선 없이는 재고 보충 큐가 정상 작동하기 어렵습니다. 질문: OTIF 58.8%를 끌어올리기 위해 어떤 공급업체를 먼저 개선해야 하는가?</div>
+    </div>
+    <span class="dash-topbar-meta">2024-01 ~ 2025-12</span>
+  </div>
+  <div class="dash-body">
+
+    <div class="ai-trace">
+      <svg class="ai-trace-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="#3d4fa0" stroke-width="1.2"/><path d="M10 6v5l3 2" stroke="#3d4fa0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="ai-trace-body">
+        <div class="ai-trace-label">AI Reasoning Trace — 리드타임</div>
+        <div class="ai-trace-text">리드타임 trace · OTIF 분해 (납기준수 × 물량완전성) · 근거: 전체 OTIF 58.8% (144/245 PO); 5개 업체 중 업체_D 단독 alert (OTIF 29.4%, LT 29.3일, CV 44%, 지연 22건); 업체_E가 best (OTIF 84.4%, LT 11.3일, CV 17%)</div>
+      </div>
+    </div>
+
+    <div class="story-block">
+      <div class="story-flow">
+        <div class="sf-cell"><div class="sf-label lbl-now">현황</div><div class="sf-val">업체_D OTIF 29.4%</div><div class="sf-desc">업체_D가 OTIF 29.4%로 최저이며, 납기준수와 물량완전성이 함께 낮습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-why">원인</div><div class="sf-val">납기 편차 미반영</div><div class="sf-desc">공급업체별 실제 납기 편차가 안전재고·발주점 정책에 반영되지 않았습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-so">결과</div><div class="sf-val">SLA 분리 필요</div><div class="sf-desc">공급업체별 SLA와 발주 리드타임 마스터를 분리하면 재고 정책이 현실 리드타임을 반영합니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-act">액션</div><div class="sf-val">D사 3안 중 택일</div><div class="sf-desc">업체_D는 SLA 재협상, 대체 공급처, 리드타임 마스터 상향 중 하나를 이번 발주 사이클 전에 선택해야 합니다.</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 1</span><span class="dash-step-hdr-label">리드타임 현황 — 납기 준수율이 어느 수준인가?</span></div>
+    <div class="dash-kpi-row">
+      <div class="dk-box"><div class="dk-lbl">OTIF (납기 준수율)</div><div class="dk-val">58.8%</div><div class="dk-delta warn">최저 업체_D 29.4%</div></div>
+      <div class="dk-box"><div class="dk-lbl">평균 리드타임</div><div class="dk-val">18.0일</div><div class="dk-delta up">최단 업체_E 11.3일</div></div>
+      <div class="dk-box"><div class="dk-lbl">리드타임 CV (변동계수)</div><div class="dk-val">30%</div><div class="dk-delta dn">최대 업체_D 44%</div></div>
+      <div class="dk-box"><div class="dk-lbl">납기 지연 건수</div><div class="dk-val">61건</div><div class="dk-delta warn">전체 245건 중 24.9%</div></div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 2</span><span class="dash-step-hdr-label">원인 확인 — 어느 공급업체·구간에서 지연이 집중되는가?</span></div>
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">공급업체별 OTIF — 납기를 못 지키는 업체는?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="leadtime-supplier-otif" data-source="01d_leadtime_summary.csv" viewBox="0 0 620 280" role="img" aria-label="공급업체별 OTIF 순위">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">공급업체별 OTIF 순위</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">업체_D</text>
+<rect x="148" y="48" width="135.8" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="291.8" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">29.4%</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">업체_B</text>
+<rect x="148" y="72" width="241.4" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="397.4" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">52.3%</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">업체_C</text>
+<rect x="148" y="96" width="290.8" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="446.8" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">63.0%</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">업체_A</text>
+<rect x="148" y="120" width="307.9" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="463.9" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">66.7%</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">업체_E</text>
+<rect x="148" y="144" width="390.0" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="546.0" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">84.4%</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-charts">
+      <div class="chart-card">
+        <div class="cc-title">세부 분석 1 — 리드타임 분포 및 이상 구간</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="leadtime-average-days" data-source="01d_leadtime_summary.csv" viewBox="0 0 620 280" role="img" aria-label="공급업체별 평균 리드타임">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">공급업체별 평균 리드타임</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">업체_D</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">29.3일</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">업체_B</text>
+<rect x="148" y="72" width="260.9" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="416.9" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">19.6일</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">업체_C</text>
+<rect x="148" y="96" width="218.3" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="374.3" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">16.4일</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">업체_A</text>
+<rect x="148" y="120" width="170.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="326.4" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">12.8일</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">업체_E</text>
+<rect x="148" y="144" width="150.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="306.4" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">11.3일</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">세부 분석 2 — 납기 지연 원인 차원 분석</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="leadtime-monthly-otif" data-source="01d_leadtime_monthly.csv" viewBox="0 0 620 260" role="img" aria-label="월별 OTIF 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">월별 OTIF 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,105.5 78.6,76.8 103.3,70.2 127.9,81.5 152.5,143.8 177.2,66.0 201.8,48.0 226.5,102.3 251.1,147.7 275.7,38.0 300.4,105.5 325.0,121.2 349.6,86.0 374.3,94.0 398.9,112.7 423.5,99.3 448.2,66.0 472.8,121.2 497.5,104.2 522.1,112.7 546.7,87.2 571.4,75.3 596.0,139.3" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="105.5" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="97.5" text-anchor="middle" font-size="9" fill="#766c63">53.8%</text>
+<circle cx="127.9" cy="81.5" r="3.5" fill="#4fb799"/>
+<text x="127.9" y="73.5" text-anchor="middle" font-size="9" fill="#766c63">66.7%</text>
+<circle cx="201.8" cy="48.0" r="3.5" fill="#4fb799"/>
+<text x="201.8" y="40.0" text-anchor="middle" font-size="9" fill="#766c63">84.6%</text>
+<circle cx="275.7" cy="38.0" r="3.5" fill="#4fb799"/>
+<text x="275.7" y="30.0" text-anchor="middle" font-size="9" fill="#766c63">90.0%</text>
+<circle cx="349.6" cy="86.0" r="3.5" fill="#4fb799"/>
+<text x="349.6" y="78.0" text-anchor="middle" font-size="9" fill="#766c63">64.3%</text>
+<circle cx="423.5" cy="99.3" r="3.5" fill="#4fb799"/>
+<text x="423.5" y="91.3" text-anchor="middle" font-size="9" fill="#766c63">57.1%</text>
+<circle cx="497.5" cy="104.2" r="3.5" fill="#4fb799"/>
+<text x="497.5" y="96.2" text-anchor="middle" font-size="9" fill="#766c63">54.5%</text>
+<circle cx="571.4" cy="75.3" r="3.5" fill="#4fb799"/>
+<text x="571.4" y="67.3" text-anchor="middle" font-size="9" fill="#766c63">70.0%</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">2024-01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">2025-11</text>
+</svg>
+      </div>
+    </div>
+
+    <!-- v2.0: 업체별 OTIF 산점도 (납기준수율 × 물량완전성율 2축) -->
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">업체별 OTIF 산점도 — 납기 준수 vs 물량 완전성 포지셔닝</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="leadtime-scatter" data-source="01d_leadtime_summary.csv" viewBox="0 0 640 300" role="img" aria-label="납기준수율 x 물량완전성">
+<rect width="640" height="300" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">납기준수율 x 물량완전성</text>
+<line x1="62" y1="246" x2="602" y2="246" stroke="rgba(96,79,67,.18)"/>
+<line x1="62" y1="38" x2="62" y2="246" stroke="rgba(96,79,67,.18)"/>
+<line x1="394.3" y1="38" x2="394.3" y2="246" stroke="rgba(53,201,149,.35)" stroke-dasharray="5,4"/>
+<line x1="62" y1="90.0" x2="602" y2="90.0" stroke="rgba(53,201,149,.35)" stroke-dasharray="5,4"/>
+<circle cx="382.9" cy="58.4" r="12.4" fill="rgba(239,176,93,.7)" stroke="#fff" stroke-width="2"/>
+<text x="399.3" y="62.4" text-anchor="start" font-size="10" fill="#2f2b27">업체_A 66.7%</text>
+<circle cx="284.8" cy="108.9" r="11.5" fill="rgba(239,125,134,.75)" stroke="#fff" stroke-width="2"/>
+<text x="300.3" y="112.9" text-anchor="start" font-size="10" fill="#2f2b27">업체_B 52.3%</text>
+<circle cx="382.0" cy="153.5" r="12.8" fill="rgba(239,176,93,.7)" stroke="#fff" stroke-width="2"/>
+<text x="398.8" y="157.5" text-anchor="start" font-size="10" fill="#2f2b27">업체_C 63.0%</text>
+<circle cx="122.2" cy="221.6" r="12.4" fill="rgba(239,125,134,.75)" stroke="#fff" stroke-width="2"/>
+<text x="138.6" y="225.6" text-anchor="start" font-size="10" fill="#2f2b27">업체_D 29.4%</text>
+<circle cx="532.8" cy="61.1" r="11.6" fill="rgba(53,201,149,.72)" stroke="#fff" stroke-width="2"/>
+<text x="548.4" y="65.1" text-anchor="start" font-size="10" fill="#2f2b27">업체_E 84.4%</text>
+<text x="320.0" y="284.0" text-anchor="middle" font-size="10" fill="#766c63">납기준수율</text>
+<text x="14.0" y="160.0" text-anchor="middle" font-size="10" fill="#766c63">물량완전성</text>
+</svg>
+        <details class="drill-details">
+          <summary>납기 지연 업체 상세 — 지연 건수 · CV · 평균 리드타임 (245개 PO)</summary>
+          <table class="drill-tbl">
+            <tr><th>업체명</th><th>총 PO</th><th>OTIF</th><th>납기준수율</th><th>물량완전성율</th><th>평균 LT(일)</th><th>CV(%)</th><th>지연 건수</th></tr>
+            <tr><td>업체_D</td><td>51</td><td><span class="tag-bad">29.4%</span></td><td>37.2%</td><td>82.3%</td><td>29.3</td><td>44%</td><td>22</td></tr>
+            <tr><td>업체_B</td><td>44</td><td><span class="tag-bad">52.3%</span></td><td>56.8%</td><td>93.2%</td><td>19.6</td><td>38%</td><td>12</td></tr>
+            <tr><td>업체_C</td><td>54</td><td><span class="tag-warn">63.0%</span></td><td>68.5%</td><td>88.9%</td><td>16.4</td><td>26%</td><td>10</td></tr>
+            <tr><td>업체_A</td><td>51</td><td><span class="tag-warn">66.7%</span></td><td>68.6%</td><td>98.0%</td><td>12.8</td><td>25%</td><td>13</td></tr>
+            <tr><td>업체_E</td><td>45</td><td><span class="tag-ok">84.4%</span></td><td>86.7%</td><td>97.8%</td><td>11.3</td><td>17%</td><td>4</td></tr>
+          </table>
+        </details>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 3</span><span class="dash-step-hdr-label">시뮬레이션 — 리드타임 단축 시 안전재고 절감 효과</span></div>
+    <div class="sim-widget">
+      <div class="sim-title">리드타임 시뮬레이터 <span class="sim-badge">인터랙티브</span></div>
+      <div class="sim-note">목표 LT(5~30일)를 줄이면 SS(=Z×σ×√L)가 √비율로 감소. 현재 평균 LT 18일.</div>
+      <div class="sim-slider-row">
+        <div class="sim-slider-label"><span class="sim-label">목표 리드타임</span><span class="sim-range-val" id="sim-lt-val">18일</span></div>
+        <input type="range" class="sim-range" id="sim-lt" min="0" max="100" step="1" value="52" oninput="updateSimLt(this)">
+      </div>
+      <div class="sim-results">
+        <div class="sim-res"><div class="sim-res-val" id="sim-lt-r1">—</div><div class="sim-res-lbl">SS 감소율</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-lt-r2">58.8%</div><div class="sim-res-lbl">예상 OTIF</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-lt-r3">중</div><div class="sim-res-lbl">실행 난이도</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">ACTION</span><span class="dash-step-hdr-label">즉각 실행 가능한 개선 과제</span></div>
+    <div class="dash-actions">
+      <div class="da-item"><div class="da-p">P1 — 즉시</div><div class="da-title">P1: 업체_D SLA 재협상 및 지연 사유 대사</div><div class="da-why">최저 OTIF 공급업체의 변동을 줄여 품절과 과잉 안전재고 부담을 동시에 줄입니다.</div></div>
+      <div class="da-item"><div class="da-p">P2 — 2~4주</div><div class="da-title">P2: 대체 공급처 가능 SKU의 발주 비중 조정</div><div class="da-why">OTIF가 낮고 PO 수가 충분한 공급업체부터 개선합니다.</div></div>
+      <div class="da-item"><div class="da-p">P3 — 모니터링</div><div class="da-title">P3: 해당 공급업체 품목의 리드타임 마스터 상향</div><div class="da-why">OTIF가 낮고 PO 수가 충분한 공급업체부터 개선합니다.</div></div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /panel-2 -->
+
+
+<!-- ══════════════════════════════════════════
+  PANEL 3 — 물류비 효율
+════════════════════════════════════════════ -->
+<div class="dash-panel" id="panel-3">
+<div class="dash">
+  <div class="dash-topbar">
+    <div class="dash-topbar-left">
+      <div class="dash-topbar-title">물류비 효율 — <em>Cost Breakdown · Unit Price · Anomaly Detection</em></div>
+      <div class="dash-topbar-problem"><strong>Business Question</strong> FW 시즌 맥락: 물류비는 총액보다 4M 피크와 건당 단가 이상치를 분리해야 협상 대상이 보입니다. 질문: 건당 단가 3,039원와 이상치 2건에서 어떤 비용 항목을 먼저 볼 것인가?</div>
+    </div>
+    <span class="dash-topbar-meta">2024-01 ~ 2025-12</span>
+  </div>
+  <div class="dash-body">
+
+    <div class="ai-trace">
+      <svg class="ai-trace-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="#3d4fa0" stroke-width="1.2"/><path d="M10 6v5l3 2" stroke="#3d4fa0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="ai-trace-body">
+        <div class="ai-trace-label">AI Reasoning Trace — 물류비</div>
+        <div class="ai-trace-text">물류비 trace · 4M 분해(Man·Machine·Material·Method) + 단가 이상치 검출 · 근거: 총 물류비 552.9M원 (24개월); 매출 대비 0.30% (양호); ±2σ 초과 이상치 2건 (반품처리비 2024-01, 2025-01 — 모두 연초 시즌); 출고비(Machine) 단일 항목 49% 점유</div>
+      </div>
+    </div>
+
+    <div class="story-block">
+      <div class="story-flow">
+        <div class="sf-cell"><div class="sf-label lbl-now">현황</div><div class="sf-val">물류비율 0.30%</div><div class="sf-desc">매출 대비 0.30%로 낮지만 4M·항목별로 보면 반복 협상 후보와 이상치 2건이 분리됩니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-why">원인</div><div class="sf-val">계약·이벤트 혼재</div><div class="sf-desc">계약 단가 변화와 이벤트성 물량 변동이 월별 총액 안에 섞여 있습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-so">결과</div><div class="sf-val">반복 vs 일회성 분리</div><div class="sf-desc">반복 항목과 일회성 이벤트를 분리하면 협상 대상을 좁힐 수 있습니다.</div></div>
+        <div class="sf-cell"><div class="sf-label lbl-act">액션</div><div class="sf-val">출고비 + 이상치 2건</div><div class="sf-desc">출고비(Machine)부터 단가·물량·이벤트를 분해하고, 이상치 2건을 별도 대사합니다.</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 1</span><span class="dash-step-hdr-label">물류비 현황 — 총액과 구성이 어떤가?</span></div>
+    <div class="dash-kpi-row">
+      <div class="dk-box"><div class="dk-lbl">물류비율 (매출 대비)</div><div class="dk-val">0.30%</div><div class="dk-delta up">업계 평균 대비 양호</div></div>
+      <div class="dk-box"><div class="dk-lbl">전체 평균 단가</div><div class="dk-val">3,039원</div><div class="dk-delta warn">반품 단가 4,250원이 최대</div></div>
+      <div class="dk-box"><div class="dk-lbl">총 물류비 (24개월)</div><div class="dk-val">552.9M원</div><div class="dk-delta up">출고비 49% (최대 항목)</div></div>
+      <div class="dk-box"><div class="dk-lbl">±2σ 이상치 건수</div><div class="dk-val">2건</div><div class="dk-delta dn">반품처리비 (연초 시즌)</div></div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 2</span><span class="dash-step-hdr-label">원인 확인 — 어떤 항목에서 단가가 오르고 있는가?</span></div>
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">월별 건당 단가 추이 — 단가가 구조적으로 오르고 있는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="logistics-monthly-trend" data-source="01c_logistics_monthly.csv" viewBox="0 0 620 260" role="img" aria-label="월별 물류비 추이">
+<rect width="620" height="260" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">월별 물류비 추이</text>
+<line x1="54" y1="206" x2="596" y2="206" stroke="rgba(96,79,67,.18)"/>
+<polyline points="54.0,71.5 77.6,107.2 101.1,72.9 124.7,77.6 148.3,72.8 171.8,62.3 195.4,119.3 219.0,123.8 242.5,61.0 266.1,59.5 289.7,60.6 313.2,38.6 336.8,65.0 360.3,100.4 383.9,67.0 407.5,74.0 431.0,69.0 454.6,52.9 478.2,106.2 501.7,112.1 525.3,51.9 548.9,49.8 572.4,42.1 596.0,38.0" fill="none" stroke="#4fb799" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54.0" cy="71.5" r="3.5" fill="#4fb799"/>
+<text x="54.0" y="63.5" text-anchor="middle" font-size="9" fill="#766c63">23.3백만</text>
+<circle cx="148.3" cy="72.8" r="3.5" fill="#4fb799"/>
+<text x="148.3" y="64.8" text-anchor="middle" font-size="9" fill="#766c63">23.1백만</text>
+<circle cx="242.5" cy="61.0" r="3.5" fill="#4fb799"/>
+<text x="242.5" y="53.0" text-anchor="middle" font-size="9" fill="#766c63">25.1백만</text>
+<circle cx="336.8" cy="65.0" r="3.5" fill="#4fb799"/>
+<text x="336.8" y="57.0" text-anchor="middle" font-size="9" fill="#766c63">24.4백만</text>
+<circle cx="431.0" cy="69.0" r="3.5" fill="#4fb799"/>
+<text x="431.0" y="61.0" text-anchor="middle" font-size="9" fill="#766c63">23.8백만</text>
+<circle cx="525.3" cy="51.9" r="3.5" fill="#4fb799"/>
+<text x="525.3" y="43.9" text-anchor="middle" font-size="9" fill="#766c63">26.7백만</text>
+<text x="54.0" y="240.0" text-anchor="start" font-size="9" fill="#766c63">2024-01</text>
+<text x="596.0" y="240.0" text-anchor="end" font-size="9" fill="#766c63">2025-12</text>
+</svg>
+        <details class="drill-details">
+          <summary>이상치 구간 상세 — 항목 · 4M · 발생월 · 단가 · 평균 대비</summary>
+          <table class="drill-tbl">
+            <tr><th>항목</th><th>4M 분류</th><th>발생 월</th><th>건당 단가</th><th>평균 대비</th><th>추정 원인</th></tr>
+            <tr><td>반품처리비</td><td>Man</td><td>2025-01</td><td>4,250원</td><td><span class="tag-bad">+40.3%</span></td><td>홀리데이 후 반품 폭주 (연초 반품 시즌)</td></tr>
+            <tr><td>반품처리비</td><td>Man</td><td>2024-01</td><td>3,690원</td><td><span class="tag-warn">+22.0%</span></td><td>홀리데이 후 반품 폭주 (연초 반품 시즌)</td></tr>
+          </table>
+        </details>
+      </div>
+    </div>
+
+    <div class="dash-charts">
+      <div class="chart-card">
+        <div class="cc-title">항목별 구성 — 어떤 항목이 물류비를 지배하는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="logistics-item-breakdown" data-source="01c_logistics_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="물류비 항목별 총액">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">물류비 항목별 총액</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">출고비</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">271.4백만</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">입고비</text>
+<rect x="148" y="72" width="210.3" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="366.3" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">146.4백만</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">보관료</text>
+<rect x="148" y="96" width="106.6" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="262.6" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">74.2백만</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">반품처리비</text>
+<rect x="148" y="120" width="59.4" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="215.4" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">41.3백만</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">포장재비</text>
+<rect x="148" y="144" width="28.3" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="184.3" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">19.7백만</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">이상치 분포 — ±2σ 초과 건수와 패턴</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="logistics-outliers" data-source="01c_logistics_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="건당 단가 이상치">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">건당 단가 이상치</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">반품처리비 2025-01</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">4250.5원</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">반품처리비 2024-01</text>
+<rect x="148" y="72" width="338.5" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="494.5" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">3689.5원</text>
+</svg>
+      </div>
+    </div>
+
+    <!-- v2.0: 4M 스택바 (Man·Machine·Material·Method) -->
+    <div class="dash-charts full">
+      <div class="chart-card">
+        <div class="cc-title">4M 구성 추이 — Man·Machine·Material·Method 중 어떤 항목이 급증했는가?</div>
+        <div class="cc-desc">실제 집계 CSV 기반 차트입니다. 해당 차트의 순위와 분포를 기준으로 다음 액션 우선순위를 판단합니다.</div>
+        <svg class="chart-svg" data-chart-id="logistics-4m-stack" data-source="01c_logistics_monthly.csv" viewBox="0 0 640 280" role="img" aria-label="물류비 4M 월별 구성">
+<rect width="640" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">물류비 4M 월별 구성</text>
+<line x1="48" y1="210" x2="612" y2="210" stroke="rgba(96,79,67,.18)"/>
+<rect x="48" y="121.9" width="32" height="88.1" fill="rgba(91,142,240,.66)"/>
+<rect x="48" y="107.2" width="32" height="14.8" fill="rgba(239,176,93,.68)"/>
+<rect x="48" y="88.4" width="32" height="18.8" fill="rgba(239,125,134,.68)"/>
+<rect x="48" y="84.1" width="32" height="4.2" fill="rgba(53,201,149,.65)"/>
+<text x="64.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">01</text>
+<rect x="94" y="137.9" width="32" height="72.1" fill="rgba(91,142,240,.66)"/>
+<rect x="94" y="126.1" width="32" height="11.8" fill="rgba(239,176,93,.68)"/>
+<rect x="94" y="118.8" width="32" height="7.3" fill="rgba(239,125,134,.68)"/>
+<rect x="94" y="115.7" width="32" height="3.1" fill="rgba(53,201,149,.65)"/>
+<rect x="140" y="115.3" width="32" height="94.7" fill="rgba(91,142,240,.66)"/>
+<rect x="140" y="98.7" width="32" height="16.6" fill="rgba(239,176,93,.68)"/>
+<rect x="140" y="90.3" width="32" height="8.4" fill="rgba(239,125,134,.68)"/>
+<rect x="140" y="85.9" width="32" height="4.4" fill="rgba(53,201,149,.65)"/>
+<text x="156.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">03</text>
+<rect x="186" y="120.1" width="32" height="89.9" fill="rgba(91,142,240,.66)"/>
+<rect x="186" y="104.3" width="32" height="15.8" fill="rgba(239,176,93,.68)"/>
+<rect x="186" y="96.4" width="32" height="7.9" fill="rgba(239,125,134,.68)"/>
+<rect x="186" y="92.1" width="32" height="4.3" fill="rgba(53,201,149,.65)"/>
+<rect x="232" y="115.8" width="32" height="94.2" fill="rgba(91,142,240,.66)"/>
+<rect x="232" y="99.7" width="32" height="16.1" fill="rgba(239,176,93,.68)"/>
+<rect x="232" y="91.7" width="32" height="8.0" fill="rgba(239,125,134,.68)"/>
+<rect x="232" y="87.7" width="32" height="4.0" fill="rgba(53,201,149,.65)"/>
+<text x="248.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">05</text>
+<rect x="278" y="106.3" width="32" height="103.7" fill="rgba(91,142,240,.66)"/>
+<rect x="278" y="87.8" width="32" height="18.5" fill="rgba(239,176,93,.68)"/>
+<rect x="278" y="78.2" width="32" height="9.6" fill="rgba(239,125,134,.68)"/>
+<rect x="278" y="73.3" width="32" height="4.9" fill="rgba(53,201,149,.65)"/>
+<rect x="324" y="145.2" width="32" height="64.8" fill="rgba(91,142,240,.66)"/>
+<rect x="324" y="129.4" width="32" height="15.8" fill="rgba(239,176,93,.68)"/>
+<rect x="324" y="123.9" width="32" height="5.5" fill="rgba(239,125,134,.68)"/>
+<rect x="324" y="120.9" width="32" height="3.0" fill="rgba(53,201,149,.65)"/>
+<text x="340.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">07</text>
+<rect x="370" y="146.7" width="32" height="63.3" fill="rgba(91,142,240,.66)"/>
+<rect x="370" y="134.0" width="32" height="12.7" fill="rgba(239,176,93,.68)"/>
+<rect x="370" y="128.9" width="32" height="5.1" fill="rgba(239,125,134,.68)"/>
+<rect x="370" y="126.1" width="32" height="2.8" fill="rgba(53,201,149,.65)"/>
+<rect x="416" y="104.5" width="32" height="105.5" fill="rgba(91,142,240,.66)"/>
+<rect x="416" y="86.4" width="32" height="18.2" fill="rgba(239,176,93,.68)"/>
+<rect x="416" y="77.7" width="32" height="8.7" fill="rgba(239,125,134,.68)"/>
+<rect x="416" y="72.4" width="32" height="5.3" fill="rgba(53,201,149,.65)"/>
+<text x="432.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">09</text>
+<rect x="462" y="102.3" width="32" height="107.7" fill="rgba(91,142,240,.66)"/>
+<rect x="462" y="84.5" width="32" height="17.8" fill="rgba(239,176,93,.68)"/>
+<rect x="462" y="75.3" width="32" height="9.2" fill="rgba(239,125,134,.68)"/>
+<rect x="462" y="70.5" width="32" height="4.8" fill="rgba(53,201,149,.65)"/>
+<rect x="508" y="95.1" width="32" height="114.9" fill="rgba(91,142,240,.66)"/>
+<rect x="508" y="77.4" width="32" height="17.7" fill="rgba(239,176,93,.68)"/>
+<rect x="508" y="68.2" width="32" height="9.2" fill="rgba(239,125,134,.68)"/>
+<rect x="508" y="63.7" width="32" height="4.5" fill="rgba(53,201,149,.65)"/>
+<text x="524.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">11</text>
+<rect x="554" y="93.0" width="32" height="117.0" fill="rgba(91,142,240,.66)"/>
+<rect x="554" y="74.6" width="32" height="18.4" fill="rgba(239,176,93,.68)"/>
+<rect x="554" y="65.0" width="32" height="9.5" fill="rgba(239,125,134,.68)"/>
+<rect x="554" y="60.0" width="32" height="5.0" fill="rgba(53,201,149,.65)"/>
+<rect x="64" y="248" width="9" height="9" rx="2" fill="rgba(91,142,240,.66)"/>
+<text x="78.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Machine</text>
+<rect x="156" y="248" width="9" height="9" rx="2" fill="rgba(239,176,93,.68)"/>
+<text x="170.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Method</text>
+<rect x="248" y="248" width="9" height="9" rx="2" fill="rgba(239,125,134,.68)"/>
+<text x="262.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Man</text>
+<rect x="340" y="248" width="9" height="9" rx="2" fill="rgba(53,201,149,.65)"/>
+<text x="354.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Material</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-charts">
+      <div class="chart-card">
+        <div class="cc-title">FW 피크월(11~12월) 강조 — Machine 항목이 시즌 비용 상승 주도</div>
+        <div class="cc-desc">위 4M 스택바와 동일 데이터, 시즌 해석용. 11~12월에 출고비(파랑) 급증 → 출고비 단가 협상이 가장 큰 레버.</div>
+        <svg class="chart-svg" data-chart-id="logistics-seasonal-4m" data-source="01c_logistics_monthly.csv" viewBox="0 0 640 280" role="img" aria-label="4M 비용 월별 변동">
+<rect width="640" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">4M 비용 월별 변동</text>
+<line x1="48" y1="210" x2="612" y2="210" stroke="rgba(96,79,67,.18)"/>
+<rect x="48" y="121.9" width="32" height="88.1" fill="rgba(91,142,240,.66)"/>
+<rect x="48" y="107.2" width="32" height="14.8" fill="rgba(239,176,93,.68)"/>
+<rect x="48" y="88.4" width="32" height="18.8" fill="rgba(239,125,134,.68)"/>
+<rect x="48" y="84.1" width="32" height="4.2" fill="rgba(53,201,149,.65)"/>
+<text x="64.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">01</text>
+<rect x="94" y="137.9" width="32" height="72.1" fill="rgba(91,142,240,.66)"/>
+<rect x="94" y="126.1" width="32" height="11.8" fill="rgba(239,176,93,.68)"/>
+<rect x="94" y="118.8" width="32" height="7.3" fill="rgba(239,125,134,.68)"/>
+<rect x="94" y="115.7" width="32" height="3.1" fill="rgba(53,201,149,.65)"/>
+<rect x="140" y="115.3" width="32" height="94.7" fill="rgba(91,142,240,.66)"/>
+<rect x="140" y="98.7" width="32" height="16.6" fill="rgba(239,176,93,.68)"/>
+<rect x="140" y="90.3" width="32" height="8.4" fill="rgba(239,125,134,.68)"/>
+<rect x="140" y="85.9" width="32" height="4.4" fill="rgba(53,201,149,.65)"/>
+<text x="156.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">03</text>
+<rect x="186" y="120.1" width="32" height="89.9" fill="rgba(91,142,240,.66)"/>
+<rect x="186" y="104.3" width="32" height="15.8" fill="rgba(239,176,93,.68)"/>
+<rect x="186" y="96.4" width="32" height="7.9" fill="rgba(239,125,134,.68)"/>
+<rect x="186" y="92.1" width="32" height="4.3" fill="rgba(53,201,149,.65)"/>
+<rect x="232" y="115.8" width="32" height="94.2" fill="rgba(91,142,240,.66)"/>
+<rect x="232" y="99.7" width="32" height="16.1" fill="rgba(239,176,93,.68)"/>
+<rect x="232" y="91.7" width="32" height="8.0" fill="rgba(239,125,134,.68)"/>
+<rect x="232" y="87.7" width="32" height="4.0" fill="rgba(53,201,149,.65)"/>
+<text x="248.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">05</text>
+<rect x="278" y="106.3" width="32" height="103.7" fill="rgba(91,142,240,.66)"/>
+<rect x="278" y="87.8" width="32" height="18.5" fill="rgba(239,176,93,.68)"/>
+<rect x="278" y="78.2" width="32" height="9.6" fill="rgba(239,125,134,.68)"/>
+<rect x="278" y="73.3" width="32" height="4.9" fill="rgba(53,201,149,.65)"/>
+<rect x="324" y="145.2" width="32" height="64.8" fill="rgba(91,142,240,.66)"/>
+<rect x="324" y="129.4" width="32" height="15.8" fill="rgba(239,176,93,.68)"/>
+<rect x="324" y="123.9" width="32" height="5.5" fill="rgba(239,125,134,.68)"/>
+<rect x="324" y="120.9" width="32" height="3.0" fill="rgba(53,201,149,.65)"/>
+<text x="340.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">07</text>
+<rect x="370" y="146.7" width="32" height="63.3" fill="rgba(91,142,240,.66)"/>
+<rect x="370" y="134.0" width="32" height="12.7" fill="rgba(239,176,93,.68)"/>
+<rect x="370" y="128.9" width="32" height="5.1" fill="rgba(239,125,134,.68)"/>
+<rect x="370" y="126.1" width="32" height="2.8" fill="rgba(53,201,149,.65)"/>
+<rect x="416" y="104.5" width="32" height="105.5" fill="rgba(91,142,240,.66)"/>
+<rect x="416" y="86.4" width="32" height="18.2" fill="rgba(239,176,93,.68)"/>
+<rect x="416" y="77.7" width="32" height="8.7" fill="rgba(239,125,134,.68)"/>
+<rect x="416" y="72.4" width="32" height="5.3" fill="rgba(53,201,149,.65)"/>
+<text x="432.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">09</text>
+<rect x="462" y="102.3" width="32" height="107.7" fill="rgba(91,142,240,.66)"/>
+<rect x="462" y="84.5" width="32" height="17.8" fill="rgba(239,176,93,.68)"/>
+<rect x="462" y="75.3" width="32" height="9.2" fill="rgba(239,125,134,.68)"/>
+<rect x="462" y="70.5" width="32" height="4.8" fill="rgba(53,201,149,.65)"/>
+<rect x="508" y="95.1" width="32" height="114.9" fill="rgba(91,142,240,.66)"/>
+<rect x="508" y="77.4" width="32" height="17.7" fill="rgba(239,176,93,.68)"/>
+<rect x="508" y="68.2" width="32" height="9.2" fill="rgba(239,125,134,.68)"/>
+<rect x="508" y="63.7" width="32" height="4.5" fill="rgba(53,201,149,.65)"/>
+<text x="524.0" y="230.0" text-anchor="middle" font-size="9" fill="#766c63">11</text>
+<rect x="554" y="93.0" width="32" height="117.0" fill="rgba(91,142,240,.66)"/>
+<rect x="554" y="74.6" width="32" height="18.4" fill="rgba(239,176,93,.68)"/>
+<rect x="554" y="65.0" width="32" height="9.5" fill="rgba(239,125,134,.68)"/>
+<rect x="554" y="60.0" width="32" height="5.0" fill="rgba(53,201,149,.65)"/>
+<rect x="64" y="248" width="9" height="9" rx="2" fill="rgba(91,142,240,.66)"/>
+<text x="78.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Machine</text>
+<rect x="156" y="248" width="9" height="9" rx="2" fill="rgba(239,176,93,.68)"/>
+<text x="170.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Method</text>
+<rect x="248" y="248" width="9" height="9" rx="2" fill="rgba(239,125,134,.68)"/>
+<text x="262.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Man</text>
+<rect x="340" y="248" width="9" height="9" rx="2" fill="rgba(53,201,149,.65)"/>
+<text x="354.0" y="256.0" text-anchor="start" font-size="9" fill="#766c63">Material</text>
+</svg>
+      </div>
+      <div class="chart-card">
+        <div class="cc-title">항목별 24개월 총액 — 출고비가 절반(49%) 차지</div>
+        <div class="cc-desc">출고비 271M(49%) + 입고비 146M(26%) = 75%. 협상 우선순위는 큰 항목부터. (보관료는 월청구 24건뿐이라 '건당 단가'로 비교 불가)</div>
+        <svg class="chart-svg" data-chart-id="logistics-item-totals" data-source="01c_logistics_monthly.csv" viewBox="0 0 620 280" role="img" aria-label="물류비 항목별 24개월 총액 (백만원)">
+<rect width="620" height="280" fill="#fff"/>
+<text x="18.0" y="24.0" text-anchor="start" font-size="13" fill="#2f2b27">물류비 항목별 24개월 총액 (백만원)</text>
+<text x="138.0" y="60.0" text-anchor="end" font-size="10" fill="#766c63">출고비</text>
+<rect x="148" y="48" width="390.0" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="546.0" y="60.0" text-anchor="start" font-size="10" fill="#2f2b27">271.4M (49%)</text>
+<text x="138.0" y="84.0" text-anchor="end" font-size="10" fill="#766c63">입고비</text>
+<rect x="148" y="72" width="210.4" height="15" rx="4" fill="rgba(239,125,134,.70)"/>
+<text x="366.4" y="84.0" text-anchor="start" font-size="10" fill="#2f2b27">146.4M (26%)</text>
+<text x="138.0" y="108.0" text-anchor="end" font-size="10" fill="#766c63">보관료</text>
+<rect x="148" y="96" width="106.6" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="262.6" y="108.0" text-anchor="start" font-size="10" fill="#2f2b27">74.2M (13%)</text>
+<text x="138.0" y="132.0" text-anchor="end" font-size="10" fill="#766c63">반품처리비</text>
+<rect x="148" y="120" width="59.3" height="15" rx="4" fill="rgba(239,176,93,.58)"/>
+<text x="215.3" y="132.0" text-anchor="start" font-size="10" fill="#2f2b27">41.3M (7%)</text>
+<text x="138.0" y="156.0" text-anchor="end" font-size="10" fill="#766c63">포장재비</text>
+<rect x="148" y="144" width="28.3" height="15" rx="4" fill="rgba(53,201,149,.65)"/>
+<text x="184.3" y="156.0" text-anchor="start" font-size="10" fill="#2f2b27">19.7M (4%)</text>
+<text x="148" y="200" font-size="10" fill="#766c63">처리 단가 (참고): 출고 3,805원/건 · 입고 5,689원/건 · 반품 3,378원/건 · 포장 271원/건</text>
+<text x="148" y="216" font-size="10" fill="#766c63">보관료는 월 단위 청구 (24건) — 다른 항목과 '건당' 단가 직접비교 불가</text>
+</svg>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">STEP 3</span><span class="dash-step-hdr-label">비용 시뮬레이션 — 단가 협상 시 절감 효과는?</span></div>
+    <div class="sim-widget">
+      <div class="sim-title">물류비 절감 시뮬레이터 <span class="sim-badge">인터랙티브</span></div>
+      <div class="sim-note">단가 절감률(0~30%)을 기준으로 연간 절감액 추정. 24개월 기준 연환산 적용.</div>
+      <div class="sim-slider-row">
+        <div class="sim-slider-label"><span class="sim-label">단가 절감률</span><span class="sim-range-val" id="sim-cost-val">0%</span></div>
+        <input type="range" class="sim-range" id="sim-cost" min="0" max="100" step="1" value="0" oninput="updateSimCost(this)">
+      </div>
+      <div class="sim-results">
+        <div class="sim-res"><div class="sim-res-val" id="sim-cost-r1">0M원</div><div class="sim-res-lbl">연간 절감</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-cost-r2">0.30%</div><div class="sim-res-lbl">매출 대비 비율</div></div>
+        <div class="sim-res"><div class="sim-res-val" id="sim-cost-r3">0개</div><div class="sim-res-lbl">협상항목</div></div>
+      </div>
+    </div>
+
+    <div class="dash-step-hdr"><span class="dash-step-hdr-num">ACTION</span><span class="dash-step-hdr-label">즉각 실행 가능한 개선 과제</span></div>
+    <div class="dash-actions">
+      <div class="da-item"><div class="da-p">P1 — 즉시</div><div class="da-title">P1: 이상치 월의 비용 항목과 이벤트를 대사</div><div class="da-why">반복 비용과 일회성 비용을 분리해 협상 우선순위를 명확히 합니다.</div></div>
+      <div class="da-item"><div class="da-p">P2 — 2~4주</div><div class="da-title">P2: 금액 상위 4M/항목의 단가 계약 조건 점검</div><div class="da-why">총액 상위 항목과 이상치 항목이 겹치는 비용부터 협상 후보로 봅니다.</div></div>
+      <div class="da-item"><div class="da-p">P3 — 모니터링</div><div class="da-title">P3: 반복 상승 항목은 다음 계약 협상 후보로 등록</div><div class="da-why">총액 상위 항목과 이상치 항목이 겹치는 비용부터 협상 후보로 봅니다.</div></div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /panel-3 -->
+
+
+<p class="footnote">AI Data Analysis Pipeline · @dashboard agent output · runs/latest/outputs/06_dashboard.html</p>
+
+
+<script>
+  /* ==========================================================
+     v3 Dashboard — Simulation Logic
+     모든 수식은 KPI snapshot의 실측값에 선형/제곱근 보간을 적용한
+     단순 추정. 정확한 시뮬레이션은 별도 모델 필요.
+  ========================================================== */
+
+  function switchPanel(idx, btn) {
+    document.querySelectorAll('.method-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+    document.querySelectorAll('.dash-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function switchSc(btn, id) {
+    const card = btn.closest('.chart-card');
+    card.querySelectorAll('.sc-tab').forEach(b => b.classList.toggle('active', b === btn));
+    card.querySelectorAll('.sc-pane').forEach(p => p.classList.toggle('active', p.id === id));
+  }
+
+  function updateSliderFill(el) {
+    const min = +el.min || 0, max = +el.max || 100, val = +el.value;
+    const pct = ((val - min) / (max - min)) * 100;
+    el.style.background = `linear-gradient(to right, #4fb799 ${pct}%, rgba(96,79,67,.15) ${pct}%)`;
+  }
+
+  /* ───── Panel 0 · 재고 보충 커버리지 ───── */
+  /* 0% → SR 81.8% / 보충 0 / 과잉 1
+     100% → SR 95% / 보충 9,616 / 과잉 5 */
+  function updateSimA(el) {
+    updateSliderFill(el);
+    const cov = +el.value;
+    const sr = 81.8 + (95.0 - 81.8) * (cov / 100);
+    const replenish = Math.round(9616 * (cov / 100));
+    const excess = Math.round(1 + 4 * (cov / 100));
+    document.getElementById('sim-a-val').textContent = cov + '%';
+    document.getElementById('sim-a-r1').textContent = sr.toFixed(1) + '%';
+    document.getElementById('sim-a-r2').textContent = replenish.toLocaleString() + '개';
+    document.getElementById('sim-a-r3').textContent = excess + '개';
+  }
+
+  /* ───── Panel 0 · 재고 시나리오 ───── */
+  const invScenarios = {
+    'sc-a': { sr: '85.0%', cost: '+0.3%',  prio: 'P1만' },
+    'sc-b': { sr: '91.0%', cost: '+0.8%',  prio: 'P1+P2' },
+    'sc-c': { sr: '95.0%', cost: '+1.2%',  prio: 'P1+P2+P3' }
+  };
+  function selectScenario(btn, id) {
+    btn.closest('.sim-widget').querySelectorAll('.sim-scenario-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const s = invScenarios[id] || invScenarios['sc-a'];
+    document.getElementById('sc-r1').textContent = s.sr;
+    document.getElementById('sc-r2').textContent = s.cost;
+    document.getElementById('sc-r3').textContent = s.prio;
+  }
+
+  /* ───── Panel 1 · MAPE 목표 ───── */
+  /* slider 0~100 → MAPE 5~15% 매핑. 현재값 10.4% (slider=54)
+     risk = 목표 MAPE를 못 맞추는 SKU 수 (22개 SKU 분포 기반 추정) */
+  function updateSimMape(el) {
+    updateSliderFill(el);
+    const v = +el.value;
+    const mape = 5 + (15 - 5) * (v / 100);
+    const bias = -mape; /* 모든 SKU 과소예측 패턴 유지 */
+    let risk;
+    if (mape >= 14) risk = 0;
+    else if (mape >= 12) risk = 2;
+    else if (mape >= 11) risk = 5;
+    else if (mape >= 10) risk = 8;
+    else if (mape >= 8)  risk = 14;
+    else if (mape >= 6)  risk = 20;
+    else risk = 22;
+    document.getElementById('sim-mape-val').textContent = mape.toFixed(1) + '%';
+    document.getElementById('sim-mape-r1').textContent = mape.toFixed(1) + '%';
+    document.getElementById('sim-mape-r2').textContent = bias.toFixed(1) + '%';
+    document.getElementById('sim-mape-r3').textContent = risk + '개';
+  }
+
+  /* ───── Panel 1 · 예측 시나리오 ───── */
+  const fcScenarios = {
+    'a': { mape: '10.4%', stock: '기준',     scope: '0개' },
+    'b': { mape: '8.5%',  stock: '-2,000개', scope: '11개 (A+신상품)' },
+    'c': { mape: '6.5%',  stock: '-5,000개', scope: '22개 (전 SKU)' }
+  };
+  function selectScenarioForecast(btn, key) {
+    btn.closest('.sim-widget').querySelectorAll('.sim-scenario-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const s = fcScenarios[key] || fcScenarios['a'];
+    document.getElementById('dsc-r1').textContent = s.mape;
+    document.getElementById('dsc-r2').textContent = s.stock;
+    document.getElementById('dsc-r3').textContent = s.scope;
+  }
+
+  /* ───── Panel 2 · 리드타임 ───── */
+  /* slider 0~100 → LT 5~30일. 현재 18일 (slider≈52)
+     SS = Z×σ×√L → SS 감소율 = (1 - √(target/18)) × 100 */
+  function updateSimLt(el) {
+    updateSliderFill(el);
+    const v = +el.value;
+    const lt = 5 + (30 - 5) * (v / 100);
+    const ssReduction = (1 - Math.sqrt(lt / 18.0)) * 100;
+    /* LT 단축 시 OTIF 개선: 현재 58.8%, LT 11일이면 84% (업체_E 수준) */
+    const otif = 58.8 + (84.4 - 58.8) * Math.max(0, (18 - lt) / (18 - 11));
+    let diff;
+    if (lt < 10) diff = '극상';
+    else if (lt < 14) diff = '상';
+    else if (lt < 19) diff = '중';
+    else diff = '하';
+    document.getElementById('sim-lt-val').textContent = lt.toFixed(1) + '일';
+    document.getElementById('sim-lt-r1').textContent = (ssReduction > 0 ? '-' : '+') + Math.abs(ssReduction).toFixed(1) + '%';
+    document.getElementById('sim-lt-r2').textContent = Math.min(95, Math.max(58.8, otif)).toFixed(1) + '%';
+    document.getElementById('sim-lt-r3').textContent = diff;
+  }
+
+  /* ───── Panel 3 · 단가 절감 ───── */
+  /* 24개월 총 552.9M원 → 연 환산 276.4M원
+     slider 0~100 → 절감률 0~30% */
+  function updateSimCost(el) {
+    updateSliderFill(el);
+    const v = +el.value;
+    const reduction = (v / 100) * 30;
+    const annualSave = 276.4 * (reduction / 100);
+    const newRatio = 0.30 * (1 - reduction / 100);
+    /* 절감률 5%당 항목 1개 협상 가정 (5개 항목 cap) */
+    const items = Math.min(5, Math.round(reduction / 5));
+    document.getElementById('sim-cost-val').textContent = reduction.toFixed(0) + '%';
+    document.getElementById('sim-cost-r1').textContent = annualSave.toFixed(1) + 'M원';
+    document.getElementById('sim-cost-r2').textContent = newRatio.toFixed(2) + '%';
+    document.getElementById('sim-cost-r3').textContent = items + '개';
+  }
+
+  /* ───── 초기화 ───── */
+  document.querySelectorAll('.sim-range').forEach(updateSliderFill);
+  ['sim-a','sim-mape','sim-lt','sim-cost'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id === 'sim-a')    updateSimA(el);
+    if (id === 'sim-mape') updateSimMape(el);
+    if (id === 'sim-lt')   updateSimLt(el);
+    if (id === 'sim-cost') updateSimCost(el);
+  });
+</script>
+
+</body>
+</html>
