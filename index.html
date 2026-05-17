@@ -337,9 +337,9 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
 <header class="hero">
   <div class="wrap">
     <p class="eyebrow">SCM 운영기획 · 사이드 프로젝트 포트폴리오</p>
-    <h1>풀필먼트 운영의 의사결정을<br>데이터·AI로 자동화합니다.</h1>
+    <h1>풀필먼트 운영의 의사결정을<br>데이터·ML로 자동화합니다.</h1>
     <p class="lead">
-      본 사이트는 <strong>직접 구축한 AI 데이터 파이프라인과 KPI 대시보드 결과물 2종</strong>을 모은 곳입니다. SCM 운영기획 영역에서 매주 반복되는 분석·진단·액션 도출 과정을 표준 흐름으로 자동화할 수 있는지 검증하기 위해 만들었습니다.
+      <strong>8단계 AI 분석 파이프라인 · LightGBM quantile ML 14일 예측 · 9분면 SKU 위험 분석 · 4-fold 백테스트 MAPE 3.38%</strong> ─ SCM 운영기획 영역에서 매주 반복되는 진단·KPI·액션 도출 흐름을 표준화·자동화하기 위해 직접 구축한 분석 자산 2종 모음입니다.
     </p>
     <div class="cta-row">
       <a href="#dashboards" class="btn btn-primary">대시보드 데모 보기 ↓</a>
@@ -385,14 +385,15 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
 
       <article class="dash-card">
         <div class="body">
-          <h3>AI 데이터 파이프라인 대시보드</h3>
-          <div class="tagline">scm-data-v1 · 8단계 자동 분석 → 의사결정 가이드</div>
-          <p>샘플 SCM 데이터를 입력하면 프로파일링 → EDA → 진단 → 문제 정의 → KPI → 임팩트 → 액션 → 대시보드까지 8단계를 LLM이 순차 생성합니다. 대시보드는 KPI 트렌드, 게이트 경보, 액션 인덱스, 검증 결과를 단일 페이지로 보여줍니다.</p>
+          <h3>AI 8단계 분석 파이프라인 대시보드</h3>
+          <div class="tagline">scm-data-v1 · 데이터 → 진단 → KPI → 액션 자동 생성</div>
+          <p>샘플 SCM 데이터를 입력하면 LLM이 프로파일링 → EDA → 진단 → 문제 정의 → KPI → 임팩트 → 액션 → 대시보드 <strong>8단계 산출물을 순차 생성</strong>합니다. 의사결정 페이지에는 <strong>9분면 SKU 위험 분석, P1/P2/P3 액션 우선순위, DOI·MAPE·turnover 6종 KPI, 게이트 경보(warn/bad), 데이터 컨트랙트 SSOT</strong> 가 통합됩니다.</p>
           <div class="feats">
-            <span class="feat-chip">KPI 트렌드 분석</span>
-            <span class="feat-chip">게이트 경보</span>
-            <span class="feat-chip">액션 인덱스</span>
-            <span class="feat-chip">검증 결과 추적</span>
+            <span class="feat-chip">9분면 SKU 위험 분석</span>
+            <span class="feat-chip">P1/P2/P3 액션 우선순위</span>
+            <span class="feat-chip">DOI · MAPE · turnover 6종 KPI</span>
+            <span class="feat-chip">KPI 게이트 경보</span>
+            <span class="feat-chip">데이터 컨트랙트 SSOT</span>
           </div>
           <a href="dashboards/pipeline/" class="btn btn-primary" target="_blank" rel="noopener">라이브 데모 열기 ↗</a>
         </div>
@@ -404,21 +405,21 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
 
       <article class="dash-card">
         <div class="body">
-          <h3>물류센터 입출고 KPI 대시보드 v3</h3>
-          <div class="tagline">SCM-PM · 운영자 일·주·월 단위 KPI 모니터링</div>
-          <p>입출고 물동량·CAPA·출고율·재고 정확도·반품 처리 흐름을 일·주·월 단위로 보여줍니다. KPI 카드, Chart.js 기반 시계열·박스플롯·구성비 차트, 이슈 리스트로 구성된 운영자 시점의 단일 페이지 대시보드입니다.</p>
+          <h3>물류센터 입출고 통합 대시보드 v3</h3>
+          <div class="tagline">SCM-PM · 8탭 통합 + ML 예측 + 35K 행 샘플 데이터</div>
+          <p><strong>4센터 × 4 카테고리 × 3 채널</strong> 입출고 운영을 종합현황 / 주간 / 월별 / 재고 / 예측(ML) / 생산성 / 드릴다운 / 모니터링 <strong>8개 탭으로 통합 관리</strong>합니다. <strong>LightGBM quantile 모델</strong>이 14일 수요를 80%/95% 예측 구간과 함께 산출하고, <strong>4-fold 백테스트로 MAPE 3.38%</strong> 정확도를 검증합니다.</p>
           <div class="feats">
-            <span class="feat-chip">KPI 카드</span>
-            <span class="feat-chip">Chart.js 시계열</span>
-            <span class="feat-chip">박스플롯</span>
-            <span class="feat-chip">이슈 리스트</span>
-            <span class="feat-chip">PNG 내보내기</span>
+            <span class="feat-chip">8탭 통합 운영</span>
+            <span class="feat-chip">LightGBM quantile 14일 예측</span>
+            <span class="feat-chip">4-fold 백테스트 MAPE 3.38%</span>
+            <span class="feat-chip">결품·과재·ABC 분석</span>
+            <span class="feat-chip">모델 즉시 재학습</span>
           </div>
           <a href="dashboards/outbound/" class="btn btn-primary" target="_blank" rel="noopener">라이브 데모 열기 ↗</a>
         </div>
         <div class="preview">
-          <div class="preview-icon">KPI v3</div>
-          <div class="preview-label">물동량 · CAPA · 출고율 · 재고 정확도 · 반품</div>
+          <div class="preview-icon">8 Tabs</div>
+          <div class="preview-label">종합 · 주간 · 월별 · 재고 · 예측(ML) · 생산성 · 드릴다운 · 모니터링</div>
         </div>
       </article>
 
