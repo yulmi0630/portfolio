@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCM 데이터 파이프라인·KPI 대시보드 포트폴리오</title>
-<meta name="description" content="AI 데이터 파이프라인으로 만든 SCM 운영기획 대시보드 2종">
+<meta name="description" content="SCM 운영기획 의사결정 자동화를 검증한 분석 자산 3종 — 4가지 의사결정 렌즈 / 8단계 AI 파이프라인 / ML 예측 KPI 대시보드">
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="SCM 데이터 파이프라인·KPI 대시보드 포트폴리오">
-<meta property="og:description" content="AI 데이터 파이프라인으로 만든 SCM 운영기획 대시보드 2종">
+<meta property="og:description" content="SCM 운영기획 의사결정 자동화를 검증한 분석 자산 3종 — 4가지 의사결정 렌즈 / 8단계 AI 파이프라인 / ML 예측 KPI 대시보드">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
@@ -353,23 +353,23 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
     <p class="section-eyebrow">Why</p>
     <h2>왜 만들었나</h2>
     <p class="section-lead">
-      현장에서 매주 반복해온 SCM 운영 데이터 검토를 <strong>"진단 → 문제 정의 → KPI → 액션 → 검증"의 표준 흐름</strong>으로 자동화하면, 1인 PM 체계에서도 의사결정 속도와 일관성을 높일 수 있다는 가설에서 출발했습니다.
+      현장에서 매주·매월 반복해온 SCM 의사결정(<strong>진단 · KPI · 액션 · 예측</strong>)을 표준 구조로 묶으면, 1인 PM 체계에서도 일관성과 속도를 동시에 확보할 수 있다는 가설에서 출발했습니다.
     </p>
     <div class="problem-grid">
       <div class="problem-card">
         <div class="num">01</div>
         <h3>현장 페인포인트</h3>
-        <p>매월 반복되는 KPI 검토·이슈 진단·액션 도출에 평균 8~12시간 소요. 분석자별 기준 편차로 의사결정 일관성 저하.</p>
+        <p>매주·매월 반복되는 KPI 검토·이슈 진단·액션 도출·예측 수립에 평균 8~12시간 소요. 분석자별 기준 편차로 의사결정 일관성 저하.</p>
       </div>
       <div class="problem-card">
         <div class="num">02</div>
         <h3>구조 가설</h3>
-        <p>운영 데이터 → 진단 → 문제 정의 → KPI → 액션 인덱스 → 검증을 8단계로 표준화하면 LLM이 단계별 산출물을 안정적으로 만들 수 있다.</p>
+        <p>SCM 운영기획의 핵심 의사결정 흐름을 표준 렌즈·표준 파이프라인·표준 예측 모델로 묶으면, 1인 PM 체계에서도 매번 같은 품질의 결정을 빠르게 낼 수 있다.</p>
       </div>
       <div class="problem-card">
         <div class="num">03</div>
         <h3>검증 결과</h3>
-        <p>샘플 SCM 데이터 기준 8단계 파이프라인 + 의사결정 대시보드 자동 생성. 운영자가 클릭 한 번으로 트렌드·경보·액션 확인 가능.</p>
+        <p>샘플 SCM 데이터 기준 3가지 접근(4가지 의사결정 렌즈 · 8단계 AI 파이프라인 · LightGBM ML 14일 예측)으로 검증. 각 작품이 의사결정의 다른 단계를 자동화.</p>
       </div>
     </div>
   </div>
@@ -378,8 +378,8 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
 <section id="dashboards">
   <div class="wrap">
     <p class="section-eyebrow">Live Demo</p>
-    <h2>대시보드 2종</h2>
-    <p class="section-lead">두 대시보드 모두 <strong>본인이 만든 샘플·모의 데이터</strong>로 구동되며, 라이브 환경에서 직접 클릭해보실 수 있습니다.</p>
+    <h2>분석 자산 3종</h2>
+    <p class="section-lead">세 작품 모두 <strong>본인이 만든 샘플·모의 데이터</strong>로 구동되며, 라이브 환경에서 직접 클릭해보실 수 있습니다. 각 작품은 SCM 의사결정의 서로 다른 단계 — <strong>판단(Lens) · 산출(Pipeline) · 예측(Forecast)</strong> — 을 자동화합니다.</p>
 
     <div class="dash-list">
 
@@ -447,9 +447,9 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
     </div>
 
     <details class="arch-toggle">
-      <summary>AI 파이프라인 아키텍처 자세히 보기 (8단계 산출물 흐름)</summary>
+      <summary>scm-data-v1 파이프라인 아키텍처 자세히 보기 (8단계 산출물 흐름)</summary>
       <div class="arch-body">
-        <p style="color: var(--muted); margin-top: 0;">각 단계는 직전 산출물을 입력으로 받아 LLM이 차기 단계 산출물을 생성합니다. 단계별로 JSON(구조화 데이터)과 MD(설명문) 한 쌍을 동시에 출력해 후속 단계와 사람 검토를 동시에 지원합니다.</p>
+        <p style="color: var(--muted); margin-top: 0;">위 3종 중 <strong>"AI 8단계 분석 파이프라인 대시보드"</strong> 의 내부 구조입니다. 각 단계는 직전 산출물을 입력으로 받아 LLM이 차기 단계 산출물을 생성하고, 단계별로 JSON(구조화 데이터)과 MD(설명문) 한 쌍을 동시에 출력해 후속 단계와 사람 검토를 동시에 지원합니다. (참고: "SCM 의사결정 자동화 대시보드" 는 6단계 구조 — profile · eda · problem · kpi · analysis · dashboard.)</p>
         <div class="stages">
           <div class="stage"><span class="stage-num">01</span><span class="stage-name">profile</span><div class="stage-desc">데이터셋 프로파일링</div></div>
           <div class="stage"><span class="stage-num">02</span><span class="stage-name">eda</span><div class="stage-desc">분포·결측·이상치</div></div>

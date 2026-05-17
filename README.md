@@ -1,15 +1,16 @@
 # SCM 데이터 파이프라인·KPI 대시보드 포트폴리오
 
-SCM 운영기획 의사결정 자동화를 검증하기 위해 만든 AI 데이터 파이프라인·KPI 대시보드 결과물 2종 모음.
+SCM 운영기획 의사결정 자동화를 검증하기 위해 만든 분석 자산 3종 모음.
 
 ## 구성
 
 ```
 portfolio/
-├── index.html                ← 케이스 스터디 진입점
+├── index.html                  ← 케이스 스터디 진입점
 ├── dashboards/
-│   ├── pipeline/index.html   ← AI 데이터 파이프라인 대시보드 (scm-data-v1, 8단계)
-│   └── outbound/             ← 물류센터 입출고 KPI 대시보드 v3
+│   ├── reasoning/index.html    ← SCM 의사결정 자동화 대시보드 (ai-pipeline-kit-v3, 4가지 렌즈)
+│   ├── pipeline/index.html     ← AI 8단계 분석 파이프라인 대시보드 (scm-data-v1)
+│   └── outbound/               ← 물류센터 입출고 통합 대시보드 v3 (ML 예측)
 │       ├── index.html
 │       └── data/dashboard.json
 ├── assets/
