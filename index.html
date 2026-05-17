@@ -329,7 +329,90 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
   .dash-card { grid-template-columns: 1fr; padding: 1.5rem; }
   .dash-card .preview { aspect-ratio: 16 / 9; }
   .about-row { grid-template-columns: 1fr; }
+  .pipelines-grid { grid-template-columns: 1fr; }
 }
+
+/* Methodology */
+.pipelines-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 2rem 0 1.25rem;
+}
+.pipeline-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+.pipeline-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.version-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.05em;
+}
+.stage-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--off);
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+}
+.pipeline-col h3 {
+  font-size: 1.2rem;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+}
+.pipeline-purpose {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0 0 1.25rem;
+}
+.stages-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.stages-list li {
+  background: var(--off);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  color: var(--text);
+}
+.stages-list li b {
+  color: var(--primary);
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  min-width: 6.2rem;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+.evolution-note {
+  background: var(--primary-soft);
+  border-left: 3px solid var(--primary);
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.94rem;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.7;
+}
+.evolution-note strong { color: var(--primary); }
 </style>
 </head>
 <body>
@@ -369,7 +452,7 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
       <div class="problem-card">
         <div class="num">03</div>
         <h3>검증 결과</h3>
-        <p>샘플 SCM 데이터 기준 3가지 접근(4가지 의사결정 렌즈 · 8단계 AI 파이프라인 · LightGBM ML 14일 예측)으로 검증. 각 작품이 의사결정의 다른 단계를 자동화.</p>
+        <p>샘플 SCM 데이터 기준 3가지 접근으로 검증 완료. 풀필먼트 운영의 핵심 KPI 12종(<strong>DOI · SR · OTIF · MAPE · turnover · 4M 등</strong>)을 단일 흐름에서 <strong>진단 → KPI → 액션 → 예측</strong>까지 자동 생성.</p>
       </div>
     </div>
   </div>
@@ -446,23 +529,56 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
 
     </div>
 
-    <details class="arch-toggle">
-      <summary>scm-data-v1 파이프라인 아키텍처 자세히 보기 (8단계 산출물 흐름)</summary>
-      <div class="arch-body">
-        <p style="color: var(--muted); margin-top: 0;">위 3종 중 <strong>"AI 8단계 분석 파이프라인 대시보드"</strong> 의 내부 구조입니다. 각 단계는 직전 산출물을 입력으로 받아 LLM이 차기 단계 산출물을 생성하고, 단계별로 JSON(구조화 데이터)과 MD(설명문) 한 쌍을 동시에 출력해 후속 단계와 사람 검토를 동시에 지원합니다. (참고: "SCM 의사결정 자동화 대시보드" 는 6단계 구조 — profile · eda · problem · kpi · analysis · dashboard.)</p>
-        <div class="stages">
-          <div class="stage"><span class="stage-num">01</span><span class="stage-name">profile</span><div class="stage-desc">데이터셋 프로파일링</div></div>
-          <div class="stage"><span class="stage-num">02</span><span class="stage-name">eda</span><div class="stage-desc">분포·결측·이상치</div></div>
-          <div class="stage"><span class="stage-num">03</span><span class="stage-name">diagnosis</span><div class="stage-desc">KPI 원본 + SKU 분류</div></div>
-          <div class="stage"><span class="stage-num">04</span><span class="stage-name">problem</span><div class="stage-desc">문제 정의·우선순위</div></div>
-          <div class="stage"><span class="stage-num">05</span><span class="stage-name">kpi</span><div class="stage-desc">KPI 현재값·게이트 경보</div></div>
-          <div class="stage"><span class="stage-num">06</span><span class="stage-name">impact</span><div class="stage-desc">임팩트 시뮬레이션</div></div>
-          <div class="stage"><span class="stage-num">07</span><span class="stage-name">action</span><div class="stage-desc">액션 인덱스·실행 계획</div></div>
-          <div class="stage"><span class="stage-num">08</span><span class="stage-name">dashboard</span><div class="stage-desc">단일 페이지 의사결정 화면</div></div>
-        </div>
-      </div>
-    </details>
 
+  </div>
+</section>
+
+<section id="methodology">
+  <div class="wrap">
+    <p class="section-eyebrow">Methodology</p>
+    <h2>AI 파이프라인 진화</h2>
+    <p class="section-lead">
+      6단계 메서드(<strong>ai-pipeline-kit-v3</strong>, 2026.04)에서 출발해 <strong>진단·임팩트·액션을 별도 단계로 분리한 8단계 구조</strong>(scm-data-v1, 2026.05)로 진화시켰습니다. 두 파이프라인 모두 LLM이 단계별 산출물(JSON + MD 페어)을 생성하고, 후속 단계는 직전 산출물을 입력으로 받아 결정론적으로 동작합니다.
+    </p>
+    <div class="pipelines-grid">
+      <div class="pipeline-col">
+        <div class="pipeline-meta">
+          <span class="version-tag">ai-pipeline-kit-v3 · 2026.04</span>
+          <span class="stage-count">6 단계</span>
+        </div>
+        <h3>의사결정 자동화 메서드</h3>
+        <p class="pipeline-purpose">4가지 분석 렌즈(재고 · 수요예측 · 리드타임 · 물류비) 통합 화면 생성용</p>
+        <ol class="stages-list">
+          <li><b>01 profile</b> 데이터셋 프로파일링</li>
+          <li><b>02 eda</b> 분포 · 결측 · 이상치</li>
+          <li><b>03 problem</b> 문제 정의 · 우선순위</li>
+          <li><b>04 kpi</b> KPI 현재값 · 판정</li>
+          <li><b>05 analysis</b> 분석 보고서 · 인사이트 추출</li>
+          <li><b>06 dashboard</b> 의사결정 단일 페이지</li>
+        </ol>
+      </div>
+      <div class="pipeline-col">
+        <div class="pipeline-meta">
+          <span class="version-tag">scm-data-v1 · 2026.05</span>
+          <span class="stage-count">8 단계</span>
+        </div>
+        <h3>분석 파이프라인 메서드</h3>
+        <p class="pipeline-purpose">진단 → 임팩트 시뮬레이션 → 액션 우선순위까지 자동 생성용</p>
+        <ol class="stages-list">
+          <li><b>01 profile</b> 데이터셋 프로파일링</li>
+          <li><b>02 eda</b> 분포 · 결측 · 이상치</li>
+          <li><b>03 diagnosis</b> KPI 원본 + SKU 9분면 분류</li>
+          <li><b>04 problem</b> 문제 정의 · 우선순위</li>
+          <li><b>05 kpi</b> KPI 현재값 · 게이트 경보</li>
+          <li><b>06 impact</b> 임팩트 시뮬레이션 (ROI 사전 검증)</li>
+          <li><b>07 action</b> 액션 인덱스 · P1/P2/P3 실행 계획</li>
+          <li><b>08 dashboard</b> 단일 페이지 의사결정 화면</li>
+        </ol>
+      </div>
+    </div>
+    <p class="evolution-note">
+      <strong>v3 → v1 진화 포인트</strong> ─ ① <strong>진단(diagnosis)</strong> 을 EDA 와 분리해 SKU 9분면 등급화 도입, ② <strong>임팩트 시뮬레이션</strong> 단계 신설로 액션 실행 전 ROI 사전 검증, ③ <strong>액션 인덱스</strong> 를 별도 산출물로 분리해 P1/P2/P3 실행 우선순위를 단일 진실원(SSOT)으로 가시화.
+    </p>
   </div>
 </section>
 
@@ -475,26 +591,31 @@ footer .contact a { color: var(--text); margin-left: 1rem; }
         <h4>데이터 · 분석</h4>
         <div class="stack-chips">
           <span>Python</span>
-          <span>pandas</span>
+          <span>pandas · numpy</span>
           <span>SQL</span>
+          <span>EDA · 정합성 검증</span>
           <span>Power BI</span>
           <span>Tableau</span>
         </div>
       </div>
       <div class="stack-col">
-        <h4>AI · 파이프라인</h4>
+        <h4>AI · ML · 파이프라인</h4>
         <div class="stack-chips">
-          <span>LLM</span>
-          <span>구조화 출력 (JSON)</span>
-          <span>단계별 산출물 검증</span>
+          <span>LightGBM quantile</span>
+          <span>4-fold CV 백테스트</span>
+          <span>80% / 95% 예측 구간</span>
+          <span>LLM 단계별 구조화 출력 (JSON + MD)</span>
+          <span>데이터 컨트랙트 SSOT</span>
+          <span>AI Reasoning Trace</span>
         </div>
       </div>
       <div class="stack-col">
-        <h4>대시보드 · 프론트</h4>
+        <h4>시각화 · 프론트</h4>
         <div class="stack-chips">
           <span>HTML</span>
           <span>CSS</span>
           <span>Chart.js</span>
+          <span>인라인 SVG</span>
           <span>html2canvas</span>
         </div>
       </div>
