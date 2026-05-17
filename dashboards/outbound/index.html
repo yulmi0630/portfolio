@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>물류센터 입출고 대시보드 v3</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.4.4/build/index.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root,[data-theme="light"]{--text-xs:.85rem;--text-sm:.95rem;--text-base:1.05rem;--text-lg:1.3rem;--text-xl:1.8rem;
+--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;
+--bg:#f7f6f2;--surface:#f9f8f5;--surface2:#fbfbf9;--off:#edeae5;--border:#d4d1ca;
+--text:#28251d;--muted:#7a7974;--faint:#bab9b4;--inv:#f9f8f4;
+--primary:#01696f;--primary2:#2a7f83;--success:#437a22;--error:#a13544;--warning:#d19900;
+--radius:1rem;--radius-lg:1.25rem;--shadow:0 1px 2px rgba(32,28,20,.06);--shadow-md:0 10px 28px rgba(32,28,20,.09);
+--font:'Satoshi','Inter',sans-serif}
+[data-theme="dark"]{--bg:#171614;--surface:#1c1b19;--surface2:#201f1d;--off:#22211f;--border:#393836;
+--text:#cdccca;--muted:#989692;--faint:#5a5957;--inv:#171614;
+--primary:#4f98a3;--primary2:#79b6be;--success:#6daa45;--error:#dd6974;--warning:#edb336}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:var(--font);font-size:var(--text-base);background:var(--bg);color:var(--text);line-height:1.55}
+button,input,select{font:inherit;color:inherit}
+.app{min-height:100dvh;padding:var(--space-5)}
+.shell{max-width:1600px;margin:0 auto;background:var(--surface);border:1px solid rgba(122,121,116,.14);border-radius:24px;box-shadow:var(--shadow-md);overflow:hidden}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-4);padding:var(--space-5) var(--space-6);border-bottom:1px solid rgba(122,121,116,.14);background:var(--surface2);flex-wrap:wrap}
+.title h1{margin:0;font-size:var(--text-xl);letter-spacing:-.03em}
+.title p{margin:.35rem 0 0;color:var(--muted);font-size:var(--text-sm)}
+.meta{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center}
+.chip,.ghost{border:1px solid rgba(122,121,116,.18);background:var(--surface);border-radius:999px;padding:.55rem .85rem;font-size:var(--text-sm);cursor:pointer}
+.chip.alert{background:rgba(161,53,68,.10);color:var(--error);border-color:rgba(161,53,68,.28);font-weight:600}
+.chip.fresh{background:rgba(67,122,34,.10);color:var(--success);border-color:rgba(67,122,34,.28)}
+.tabbar{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6);border-bottom:1px solid rgba(122,121,116,.14);flex-wrap:wrap}
+.tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+.tab{border:none;background:var(--off);padding:.7rem .95rem;border-radius:999px;font-weight:600;cursor:pointer;font-size:var(--text-sm);color:var(--text)}
+.tab.active{background:var(--primary);color:var(--inv)}
+.tab .new{background:var(--warning);color:#1a1a1a;font-size:.65rem;padding:.1rem .4rem;border-radius:6px;margin-left:.4rem;font-weight:700}
+.filters{display:flex;gap:.55rem;flex-wrap:wrap}
+.filters select,.filters button{border:1px solid var(--border);background:var(--surface);padding:.65rem .8rem;border-radius:12px;font-size:var(--text-sm);cursor:pointer}
+.content{padding:var(--space-5)}
+.panel{display:none;gap:var(--space-4)}
+.panel.active{display:grid}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4);margin-bottom:var(--space-4)}
+.card{background:var(--surface);border:1px solid rgba(122,121,116,.14);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow)}
+.card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)}
+.card-title h3{margin:0;font-size:var(--text-lg);letter-spacing:-.02em}
+.badge{padding:.28rem .55rem;border-radius:999px;background:var(--off);font-size:var(--text-xs);color:var(--muted)}
+.badge.warn{background:rgba(209,153,0,.15);color:var(--warning)}
+.badge.err{background:rgba(161,53,68,.15);color:var(--error)}
+.badge.ok{background:rgba(67,122,34,.15);color:var(--success)}
+.split-kpi{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--space-3);align-items:end}
+.split-kpi .label{font-size:var(--text-xs);color:var(--muted);margin-bottom:.25rem}
+.split-kpi .value{font-size:1.7rem;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.single-kpi{display:flex;flex-direction:column;gap:.25rem}
+.single-kpi .value{font-size:1.9rem;font-weight:700;letter-spacing:-.03em}
+.slash{font-size:1.4rem;color:var(--faint);padding-bottom:.2rem}
+.delta{margin-top:var(--space-3);font-size:var(--text-sm);font-weight:600}
+.up{color:var(--success)}.down{color:var(--error)}
+.chart-grid-1{display:grid;grid-template-columns:1fr;gap:var(--space-4);margin-bottom:var(--space-4)}
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)}
+.weekly-detail-table th,.weekly-detail-table td{padding:.28rem .32rem !important;line-height:1.25}
+.weekly-detail-table td:not(:first-child){white-space:nowrap;text-align:right}
+.weekly-detail-table th{white-space:nowrap;text-align:center}
+.weekly-detail-table td:first-child{white-space:normal;min-width:54px}
+.chart-card{background:var(--surface);border:1px solid rgba(122,121,116,.14);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow)}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-4)}
+.chart-head h3{margin:0;font-size:var(--text-lg)}
+.chart-head p{margin:.3rem 0 0;color:var(--muted);font-size:var(--text-sm)}
+.canvas-wrap{position:relative;min-height:280px}
+.ch-range{border:1px solid var(--border);background:var(--surface);padding:.3rem .5rem;border-radius:8px;font-size:var(--text-xs);color:var(--muted);cursor:pointer;flex-shrink:0}.ch-range:hover{color:var(--text);border-color:var(--primary)}
+.canvas-wrap.tall{min-height:340px}
+.bottom-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:var(--space-4)}
+.issue-list{display:grid;gap:var(--space-3)}
+.issue{padding:var(--space-4);background:var(--off);border-radius:14px;border:1px solid rgba(122,121,116,.12)}
+.issue.err{border-left:4px solid var(--error)}
+.issue.warn{border-left:4px solid var(--warning)}
+.issue.ok{border-left:4px solid var(--success)}
+.issue-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem}
+.issue p{margin:0;color:var(--muted);font-size:var(--text-sm)}
+.action{margin-top:.5rem;font-size:var(--text-xs);color:var(--primary);font-weight:600}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:.78rem .7rem;border-bottom:1px solid rgba(122,121,116,.12);text-align:left;font-size:var(--text-sm)}
+th{color:var(--muted);font-weight:600}
+.table-wrap{overflow:auto;max-height:480px}
+.pill{display:inline-flex;align-items:center;padding:.22rem .5rem;border-radius:999px;font-size:var(--text-xs);background:var(--off)}
+.pill.err{background:rgba(161,53,68,.15);color:var(--error)}
+.pill.warn{background:rgba(209,153,0,.15);color:var(--warning)}
+.pill.ok{background:rgba(67,122,34,.15);color:var(--success)}
+.heatmap{display:grid;grid-template-columns:60px repeat(24,1fr);gap:2px}
+.heatmap .cell{aspect-ratio:1;border-radius:3px;background:var(--off);min-height:18px}
+.heatmap .label{font-size:var(--text-xs);color:var(--muted);display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.heatmap .axis{font-size:.62rem;color:var(--faint);text-align:center}
+@media(max-width:1200px){.kpi-grid,.chart-grid-2,.bottom-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.topbar,.tabbar{flex-direction:column;align-items:flex-start}
+.kpi-grid,.chart-grid-2,.bottom-grid{grid-template-columns:1fr}.content{padding:var(--space-4)}.app{padding:var(--space-3)}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr}.split-kpi{grid-template-columns:1fr}.slash{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header class="topbar">
+<div class="title">
+<h1>물류센터 입출고 대시보드 v3</h1>
+<p>입고/출고/반품 + ML 예측 + 재고 + 생산성 통합</p>
+</div>
+<div class="meta">
+<span class="chip" id="envChip" style="background:rgba(122,121,116,.15)">● 환경 미감지</span>
+<span class="chip alert" id="alertChip">⚠ 알림 0건</span>
+<span class="chip fresh" id="freshChip">● 정적 시안 (mock)</span>
+<span class="chip" id="modelChip">예측: LightGBM v0.3</span>
+<button class="ghost" id="captureBtn">📷 캡처</button>
+<button class="ghost" id="reloadBtn">↻ 새로고침</button>
+
+</div>
+</header>
+<section class="tabbar">
+<div class="tabs">
+<button class="tab active" data-tab="summary">종합현황</button>
+<button class="tab" data-tab="weekly">주간 상세</button>
+<button class="tab" data-tab="monthly">월별 상세</button>
+<button class="tab" data-tab="inventory">재고</button>
+<button class="tab" data-tab="forecast">예측 (ML)</button>
+<button class="tab" data-tab="productivity">생산성</button>
+<button class="tab" data-tab="drilldown">드릴다운</button>
+<button class="tab" data-tab="monitor">모니터링</button>
+</div>
+<div class="filters">
+<select id="fYear"><option selected>2025년</option><option>2024년</option></select>
+<select id="fMonth"><option>전체 월</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+<select id="fWeek"><option>전체 주차</option><option>1주차</option><option>2주차</option><option>3주차</option><option>4주차</option><option>5주차</option></select>
+<select id="fCenter"><option>전체 센터</option><option>수도권 메가</option><option>중부 허브</option><option>영남 스마트</option><option>남부 풀필먼트</option></select>
+<select id="fCategory"><option>전체 카테고리</option><option>패션</option><option>리빙</option><option>식품</option><option>뷰티</option></select>
+<select id="fChannel"><option>전체 채널</option><option>온라인</option><option>오프라인</option><option>B2B</option></select>
+<button id="fApply" style="background:var(--primary);color:var(--inv);border-color:var(--primary)">🔍 조회</button>
+<button id="fReset">초기화</button><span class="chip" id="filterChip" style="display:none;background:rgba(209,153,0,.15);color:var(--warning);border-color:rgba(209,153,0,.3);margin-left:.5rem;align-self:center">🔍 필터 적용</span>
+</div>
+</section>
+<main class="content">
+
+<!-- 종합현황 -->
+<section class="panel active" id="summary">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>입고</h3><span class="badge">전주 +6.4%</span></div>
+<div class="split-kpi"><div><div class="label">예정</div><div class="value">12,480</div></div><div class="slash">/</div><div><div class="label">실입고</div><div class="value">11,930</div></div></div>
+<div class="delta up">▲ 6.4% · 수급 안정</div></article>
+<article class="card"><div class="card-title"><h3>출고</h3><span class="badge">전주 +4.8%</span></div>
+<div class="split-kpi"><div><div class="label">예상 (ML)</div><div class="value">14,120</div></div><div class="slash">/</div><div><div class="label">실출고</div><div class="value">13,710</div></div></div>
+<div class="delta up">▲ 4.8% · 예측오차 -2.9%</div></article>
+<article class="card" title="반품률 (14일 lag): 최근 7일 반품 / 14일 전 7일 출고 × 100. config.yaml lag_days로 변경 가능."><div class="card-title"><h3>반품</h3><span class="badge">전주 -2.1%</span></div>
+<div class="split-kpi"><div><div class="label">반품수량</div><div class="value">418</div></div><div class="slash">/</div><div><div class="label">반품률 ⓘ</div><div class="value">3.0%</div></div></div>
+<div class="delta up">▼ 2.1% · 7일/14일 lag</div></article>
+<article class="card"><div class="card-title"><h3>예측 정확도</h3><span class="badge ok">목표 90%</span></div>
+<div class="split-kpi"><div><div class="label">Accuracy</div><div class="value">92.4%</div></div><div class="slash">/</div><div><div class="label">MAPE</div><div class="value">7.6%</div></div></div>
+<div class="delta up">▲ 1.2%p</div></article>
+</div>
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>가용재고</h3><span class="badge">전주 -1.8%</span></div>
+<div class="split-kpi"><div><div class="label">전사</div><div class="value">284K</div></div><div class="slash">/</div><div><div class="label">건전</div><div class="value">86.2%</div></div></div>
+<div class="delta down">▼ 1.8% · 출고 강세</div></article>
+<article class="card"><div class="card-title"><h3>DOI (재고일수)</h3><span class="badge ok">14~30일 정상</span></div>
+<div class="split-kpi"><div><div class="label">평균</div><div class="value">19.8</div></div><div class="slash">/</div><div><div class="label">중앙</div><div class="value">17.2</div></div></div>
+<div class="delta up">▼ 1.4일 · 회전 가속</div></article>
+<article class="card"><div class="card-title"><h3>결품 위험</h3><span class="badge err">동적 계산</span></div>
+<div class="split-kpi"><div><div class="label">위험 그룹</div><div class="value">42</div></div><div class="slash">/</div><div><div class="label">비중</div><div class="value">2.3%</div></div></div>
+<div class="delta down">▲ 8건 · 발주 검토</div></article>
+<article class="card"><div class="card-title"><h3>과재 / 데드</h3><span class="badge warn">DOI 60+/90+</span></div>
+<div class="split-kpi"><div><div class="label">과재</div><div class="value">128</div></div><div class="slash">/</div><div><div class="label">데드</div><div class="value">37</div></div></div>
+<div class="delta down">클리어런스 필요</div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div><h3>주별 추이</h3><p>입고·출고·반품</p></div><select class="ch-range" data-target="ch-summary-week" data-default="12" onchange="applyFilter()"><option value="8">최근 8주</option><option value="12" selected>최근 12주</option><option value="26">최근 26주</option><option value="52">전체 52주</option></select></div><div class="canvas-wrap tall"><canvas id="ch-summary-week"></canvas></div></article>
+<article class="chart-card"><div class="chart-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div><h3>예측 vs 실적</h3><p>정확도 추적</p></div><select class="ch-range" data-target="ch-fcst-actual" data-default="8" onchange="applyFilter()"><option value="8" selected>최근 8주</option><option value="12">최근 12주</option><option value="26">최근 26주</option><option value="52">전체 52주</option></select></div><div class="canvas-wrap tall"><canvas id="ch-fcst-actual"></canvas></div></article>
+</div>
+<div class="bottom-grid">
+<article class="chart-card"><div class="chart-head"><div><h3>운영 알림</h3><p>임계치 자동 탐지</p></div></div>
+<div class="issue-list">
+<div class="issue err"><div class="issue-top"><strong>중부센터 입고 -11%</strong><span class="pill err">경고</span></div><p>예정 대비 -11% 미달</p><div class="action">▶ 공급사 ETA 재확인</div></div>
+<div class="issue warn"><div class="issue-top"><strong>온라인 출고 피크</strong><span class="pill warn">주의</span></div><p>예측 +18% 증가</p><div class="action">▶ 야간 인력 +6명</div></div>
+<div class="issue warn"><div class="issue-top"><strong>패션 결품 위험 12개</strong><span class="pill warn">주의</span></div><p>가용재고 7일 미만</p><div class="action">▶ 긴급 발주</div></div>
+</div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>센터별 요약</h3></div></div>
+<div class="table-wrap"><table><thead><tr><th>센터</th><th>입고달성</th><th>출고달성</th><th>반품률</th><th>예측오차</th></tr></thead><tbody>
+<tr><td>수도권 메가</td><td>95.6%</td><td>97.8%</td><td>2.8%</td><td>-3.1%</td></tr>
+<tr><td>중부 허브</td><td>92.1%</td><td>95.7%</td><td>3.4%</td><td>-8.4%</td></tr>
+<tr><td>영남 스마트</td><td>96.8%</td><td>98.2%</td><td>2.6%</td><td>-2.2%</td></tr>
+<tr><td>남부 풀필먼트</td><td>94.7%</td><td>96.3%</td><td>3.1%</td><td>-4.0%</td></tr>
+</tbody></table></div></article>
+</div>
+</section>
+
+<!-- 주간 -->
+<section class="panel" id="weekly">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>금주 입고</h3><span class="badge">+5.2%</span></div><div class="split-kpi"><div><div class="label">예정</div><div class="value">3,180</div></div><div class="slash">/</div><div><div class="label">실</div><div class="value">3,026</div></div></div><div class="delta up">▲ 5.2%</div></article>
+<article class="card"><div class="card-title"><h3>금주 출고</h3><span class="badge">+4.1%</span></div><div class="split-kpi"><div><div class="label">예상</div><div class="value">3,540</div></div><div class="slash">/</div><div><div class="label">실</div><div class="value">3,421</div></div></div><div class="delta up">▲ 4.1%</div></article>
+<article class="card"><div class="card-title"><h3>금주 반품</h3><span class="badge">-1.4%</span></div><div class="split-kpi"><div><div class="label">진행</div><div class="value">102</div></div><div class="slash">/</div><div><div class="label">반품률</div><div class="value">2.9%</div></div></div><div class="delta up">▼ 1.4%</div></article>
+<article class="card"><div class="card-title"><h3>피크 요일</h3><span class="badge">목·금</span></div><div class="split-kpi"><div><div class="label">최대 출고</div><div class="value">금</div></div><div class="slash">/</div><div><div class="label">최대 입고</div><div class="value">목</div></div></div><div class="delta up">주말 전 집중</div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>요일별 콤보</h3><p>계획·실적 + 주평균</p></div></div><div class="canvas-wrap tall"><canvas id="ch-daily-combo"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>출고 채널별</h3><p>요일별 stacked (온라인·오프라인·B2B)</p></div></div><div class="canvas-wrap tall"><canvas id="ch-weekly-channel"></canvas></div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>요일별 편차</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-daily-var"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>요일별 입고</h3><p>예정 vs 실</p></div></div><div class="canvas-wrap tall"><canvas id="ch-weekly-inbound"></canvas></div></article>
+</div>
+<div class="chart-grid-2" style="grid-template-columns:1fr">
+<article class="chart-card"><div class="chart-head"><div><h3>일별 상세</h3><p>요일별 입출고·반품률 — 출고는 채널별 (온라인·오프라인·B2B)</p></div></div><div class="table-wrap"><table class="weekly-detail-table" style="font-size:.72rem;width:100%;table-layout:auto" data-weekly-detail="1"><thead><tr><th rowspan="2">요일</th><th rowspan="2">입고<br>예정</th><th rowspan="2">실<br>입고</th><th colspan="4" style="border-left:1px solid rgba(122,121,116,.25);background:rgba(1,105,111,.06)">예상 출고</th><th colspan="4" style="border-left:1px solid rgba(122,121,116,.25);background:rgba(209,153,0,.06)">실 출고</th><th rowspan="2">반품률</th></tr><tr><th style="border-left:1px solid rgba(122,121,116,.25)">온라인</th><th>오프라인</th><th>B2B</th><th style="background:rgba(0,0,0,.04)">계</th><th style="border-left:1px solid rgba(122,121,116,.25)">온라인</th><th>오프라인</th><th>B2B</th><th style="background:rgba(0,0,0,.04)">계</th></tr></thead><tbody>
+<tr><td data-day="월">월</td><td>430</td><td>421</td><td style="border-left:1px solid rgba(122,121,116,.25)">300</td><td>126</td><td>47</td><td style="font-weight:700;background:rgba(0,0,0,.04)">473</td><td style="border-left:1px solid rgba(122,121,116,.25)">290</td><td>122</td><td>46</td><td style="font-weight:700;background:rgba(0,0,0,.04)">458</td><td>2.6%</td></tr>
+<tr><td data-day="화">화</td><td>420</td><td>368</td><td style="border-left:1px solid rgba(122,121,116,.25)">286</td><td>120</td><td>46</td><td style="font-weight:700;background:rgba(0,0,0,.04)">452</td><td style="border-left:1px solid rgba(122,121,116,.25)">278</td><td>116</td><td>45</td><td style="font-weight:700;background:rgba(0,0,0,.04)">439</td><td>2.8%</td></tr>
+<tr><td data-day="수">수</td><td>445</td><td>431</td><td style="border-left:1px solid rgba(122,121,116,.25)">312</td><td>132</td><td>47</td><td style="font-weight:700;background:rgba(0,0,0,.04)">491</td><td style="border-left:1px solid rgba(122,121,116,.25)">302</td><td>128</td><td>46</td><td style="font-weight:700;background:rgba(0,0,0,.04)">476</td><td>2.7%</td></tr>
+<tr><td data-day="목">목</td><td>500</td><td>486</td><td style="border-left:1px solid rgba(122,121,116,.25)">332</td><td>145</td><td>47</td><td style="font-weight:700;background:rgba(0,0,0,.04)">524</td><td style="border-left:1px solid rgba(122,121,116,.25)">322</td><td>141</td><td>45</td><td style="font-weight:700;background:rgba(0,0,0,.04)">508</td><td>3.5%</td></tr>
+<tr><td data-day="금">금</td><td>515</td><td>498</td><td style="border-left:1px solid rgba(122,121,116,.25)">372</td><td>162</td><td>53</td><td style="font-weight:700;background:rgba(0,0,0,.04)">587</td><td style="border-left:1px solid rgba(122,121,116,.25)">361</td><td>158</td><td>52</td><td style="font-weight:700;background:rgba(0,0,0,.04)">571</td><td>3.1%</td></tr>
+<tr><td data-day="토">토</td><td>455</td><td>439</td><td style="border-left:1px solid rgba(122,121,116,.25)">326</td><td>142</td><td>46</td><td style="font-weight:700;background:rgba(0,0,0,.04)">514</td><td style="border-left:1px solid rgba(122,121,116,.25)">316</td><td>138</td><td>45</td><td style="font-weight:700;background:rgba(0,0,0,.04)">499</td><td>2.9%</td></tr>
+<tr><td data-day="일">일</td><td>415</td><td>383</td><td style="border-left:1px solid rgba(122,121,116,.25)">308</td><td>131</td><td>46</td><td style="font-weight:700;background:rgba(0,0,0,.04)">485</td><td style="border-left:1px solid rgba(122,121,116,.25)">298</td><td>127</td><td>45</td><td style="font-weight:700;background:rgba(0,0,0,.04)">470</td><td>2.8%</td></tr>
+</tbody></table></div></article>
+</div>
+<div class="chart-grid-2" style="grid-template-columns:1fr 1fr 1fr 1fr">
+<article class="chart-card"><div class="chart-head"><div><h3>⚠️ 경고</h3></div></div><div class="issue-list">
+<div class="issue err"><div class="issue-top"><strong>화요일 입고 미달</strong><span class="pill err">경고</span></div><p>예정 420 → 실 368 (-12.4%)</p></div>
+<div class="issue warn"><div class="issue-top"><strong>목요일 반품 증가</strong><span class="pill warn">주의</span></div><p>패션 반품 접수 증가</p></div>
+</div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>📢 마케팅</h3></div></div><div class="issue-list">
+<div class="issue ok"><div class="issue-top"><strong>주말 한정 프로모션</strong><span class="pill ok">진행</span></div><p>온라인 단독 -15% 할인</p></div>
+<div class="issue ok"><div class="issue-top"><strong>VIP 고객 발송</strong><span class="pill ok">예정</span></div><p>금요일 일괄 발송</p></div>
+</div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>📋 영업 요청 출고</h3></div></div><div class="issue-list">
+<div class="issue warn"><div class="issue-top"><strong>대형 거래처 긴급</strong><span class="pill warn">우선</span></div><p>3,200 단위 우선 처리</p></div>
+<div class="issue ok"><div class="issue-top"><strong>신규 채널 오픈</strong><span class="pill ok">계획</span></div><p>화요일 첫 발송</p></div>
+</div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>📌 이슈 사항</h3></div></div><div class="issue-list">
+<div class="issue"><div class="issue-top"><strong>중부 센터 점검</strong><span class="pill">정기</span></div><p>수요일 오전 시스템 점검</p></div>
+<div class="issue"><div class="issue-top"><strong>날씨 영향</strong><span class="pill">정보</span></div><p>주말 우천 예보 — 배송 지연 가능</p></div>
+</div></article>
+</div>
+</section>
+
+<!-- 월별 -->
+<section class="panel" id="monthly">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>월 누계 입고</h3><span class="badge">+7.1%</span></div><div class="split-kpi"><div><div class="label">예정</div><div class="value">52,100</div></div><div class="slash">/</div><div><div class="label">실</div><div class="value">49,860</div></div></div><div class="delta up">▲ 7.1%</div></article>
+<article class="card"><div class="card-title"><h3>월 누계 출고</h3><span class="badge">+6.3%</span></div><div class="split-kpi"><div><div class="label">예상</div><div class="value">58,400</div></div><div class="slash">/</div><div><div class="label">실</div><div class="value">56,710</div></div></div><div class="delta up">▲ 6.3%</div></article>
+<article class="card"><div class="card-title"><h3>월 반품</h3><span class="badge">-0.8%</span></div><div class="split-kpi"><div><div class="label">수량</div><div class="value">1,704</div></div><div class="slash">/</div><div><div class="label">반품률</div><div class="value">3.0%</div></div></div><div class="delta up">▼ 0.8%</div></article>
+<article class="card"><div class="card-title"><h3>월 회전</h3><span class="badge ok">목표 1.5↑</span></div><div class="split-kpi"><div><div class="label">Turnover</div><div class="value">1.62</div></div><div class="slash">/</div><div><div class="label">전월</div><div class="value">1.48</div></div></div><div class="delta up">▲ 0.14</div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>월별 그룹형</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-month-grp"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>월별 편차</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-month-var"></canvas></div></article>
+</div>
+<div class="chart-grid-1">
+<article class="chart-card"><div class="chart-head"><div><h3>월 추세 + 목표 + 전년동월</h3></div></div><div class="canvas-wrap"><canvas id="ch-month-line"></canvas></div></article>
+</div>
+</section>
+
+<!-- 재고 -->
+<section class="panel" id="inventory">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>가용재고</h3><span class="badge">-1.8%</span></div><div class="split-kpi"><div><div class="label">전사</div><div class="value">284K</div></div><div class="slash">/</div><div><div class="label">건전</div><div class="value">86.2%</div></div></div><div class="delta down">▼ 1.8%</div></article>
+<article class="card"><div class="card-title"><h3>DOI</h3><span class="badge ok">정상</span></div><div class="split-kpi"><div><div class="label">평균</div><div class="value">19.8</div></div><div class="slash">/</div><div><div class="label">중앙</div><div class="value">17.2</div></div></div><div class="delta up">▼ 1.4일</div></article>
+<article class="card"><div class="card-title"><h3>회전율</h3><span class="badge">월</span></div><div class="split-kpi"><div><div class="label">현재</div><div class="value">1.62</div></div><div class="slash">/</div><div><div class="label">전월</div><div class="value">1.48</div></div></div><div class="delta up">▲ 0.14</div></article>
+<article class="card"><div class="card-title"><h3>결품률</h3><span class="badge err">목표 1.5%↓</span></div><div class="split-kpi"><div><div class="label">현재</div><div class="value">2.1%</div></div><div class="slash">/</div><div><div class="label">전주</div><div class="value">1.7%</div></div></div><div class="delta down">▲ 0.4%p</div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div><h3>재고 vs 출고 추이</h3></div><select class="ch-range" data-target="ch-inv-trend" data-default="8" onchange="applyFilter()"><option value="8" selected>최근 8주</option><option value="12">최근 12주</option><option value="26">최근 26주</option><option value="52">전체 52주</option></select></div><div class="canvas-wrap tall"><canvas id="ch-inv-trend"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>건전성 분포</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-inv-health"></canvas></div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>센터별 DOI</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-center-doi"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>ABC 분석</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-abc"></canvas></div></article>
+</div>
+<div class="bottom-grid">
+<article class="chart-card"><div class="chart-head"><div><h3>결품 위험 SKU</h3></div></div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>카테고리</th><th>재고</th><th>일평균</th><th>잔여일</th><th>액션</th></tr></thead><tbody>
+<tr><td>SK-100231</td><td>패션</td><td>180</td><td>52</td><td>3.5</td><td><span class="pill err">긴급발주</span></td></tr>
+<tr><td>SK-100184</td><td>패션</td><td>240</td><td>61</td><td>3.9</td><td><span class="pill err">긴급발주</span></td></tr>
+<tr><td>SK-100672</td><td>식품</td><td>150</td><td>38</td><td>3.9</td><td><span class="pill err">긴급발주</span></td></tr>
+<tr><td>SK-100442</td><td>리빙</td><td>320</td><td>48</td><td>6.7</td><td><span class="pill warn">모니터링</span></td></tr>
+<tr><td>SK-100509</td><td>리빙</td><td>410</td><td>57</td><td>7.2</td><td><span class="pill warn">모니터링</span></td></tr>
+</tbody></table></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>과재·데드 SKU</h3></div></div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>카테고리</th><th>재고</th><th>일평균</th><th>DOI</th><th>액션</th></tr></thead><tbody>
+<tr><td>SK-200184</td><td>패션</td><td>1,840</td><td>3</td><td>613일</td><td><span class="pill err">데드</span></td></tr>
+<tr><td>SK-200237</td><td>리빙</td><td>920</td><td>2</td><td>460일</td><td><span class="pill err">데드</span></td></tr>
+<tr><td>SK-200441</td><td>뷰티</td><td>520</td><td>5</td><td>104일</td><td><span class="pill warn">클리어런스</span></td></tr>
+<tr><td>SK-200502</td><td>패션</td><td>610</td><td>8</td><td>76일</td><td><span class="pill warn">프로모션</span></td></tr>
+</tbody></table></div></article>
+</div>
+</section>
+
+<!-- 예측 ML -->
+<section class="panel" id="forecast">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>익일 예측</h3><span class="badge ok">95%</span></div><div class="split-kpi"><div><div class="label">점추정</div><div class="value">14,360</div></div><div class="slash">/</div><div><div class="label">상한</div><div class="value">15,820</div></div></div><div class="delta up">하한 12,930</div></article>
+<article class="card"><div class="card-title"><h3>모델 정확도</h3><span class="badge">7일</span></div><div class="split-kpi"><div><div class="label">Accuracy</div><div class="value">92.4%</div></div><div class="slash">/</div><div><div class="label">MAPE</div><div class="value">7.6%</div></div></div><div class="delta up">▲ 1.2%p</div></article>
+<article class="card"><div class="card-title"><h3>Bias</h3><span class="badge warn">과소예측</span></div><div class="single-kpi"><div class="label">최근 4주</div><div class="value">-2.3%</div></div><div class="delta down">예측이 실적보다 2.3% 낮음</div></article>
+<article class="card"><div class="card-title"><h3>학습 상태</h3><span class="badge ok">최신</span></div><div class="single-kpi"><div class="label">마지막 재학습</div><div class="value" style="font-size:1.2rem">2026-05-08 02:00</div></div><div class="delta up">cutoff: 2026-05-07</div><button class="ghost" id="retrainBtn" style="margin-top:.6rem;width:100%">▶ 즉시 재학습</button></article>
+</div>
+<div class="chart-grid-1">
+<article class="chart-card"><div class="chart-head"><div><h3>14일 예측 + 80%/95% 구간</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-fcst"></canvas></div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>모델 비교 (백테스트)</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-model-cmp"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>피처 중요도</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-feat-imp"></canvas></div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>채널별 예측</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-fcst-channel"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>What-If</h3><p>시나리오 시뮬레이션</p></div></div>
+<div style="padding:.5rem 0">
+<div style="display:grid;grid-template-columns:120px 1fr 80px;gap:.6rem;margin-bottom:.6rem;align-items:center"><span>프로모션</span><input type="range" min="0" max="50" value="15" id="wifPromo"><span id="wifPromoVal">+15%</span></div>
+<div style="display:grid;grid-template-columns:120px 1fr 80px;gap:.6rem;margin-bottom:.6rem;align-items:center"><span>날씨(강수)</span><input type="range" min="0" max="50" value="0" id="wifRain"><span id="wifRainVal">0mm</span></div>
+<div style="display:grid;grid-template-columns:120px 1fr 80px;gap:.6rem;margin-bottom:.6rem;align-items:center"><span>휴일</span><input type="range" min="-30" max="30" value="0" id="wifHoliday"><span id="wifHolidayVal">0%</span></div>
+<div style="margin-top:1rem;padding:1rem;background:var(--off);border-radius:14px"><div style="font-size:var(--text-sm);color:var(--muted)">시뮬레이션 결과</div><div style="font-size:1.5rem;font-weight:700" id="wifResult">14,360 → 15,890 (+10.7%)</div><div style="font-size:var(--text-xs);color:var(--muted);margin-top:.3rem">필요 인력: <strong id="wifHC">+9명</strong></div></div>
+</div></article>
+</div>
+</section>
+
+<!-- 생산성 -->
+<section class="panel" id="productivity">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>UPH</h3><span class="badge">+3.2%</span></div><div class="split-kpi"><div><div class="label">전사</div><div class="value">98.6</div></div><div class="slash">/</div><div><div class="label">목표</div><div class="value">100</div></div></div><div class="delta up">▲ 3.2%</div></article>
+<article class="card"><div class="card-title"><h3>인당 처리</h3><span class="badge">주간</span></div><div class="split-kpi"><div><div class="label">피킹</div><div class="value">412</div></div><div class="slash">/</div><div><div class="label">패킹</div><div class="value">386</div></div></div><div class="delta up">▲ 5.4%</div></article>
+<article class="card"><div class="card-title"><h3>오피킹률</h3><span class="badge ok">목표 0.5%↓</span></div><div class="single-kpi"><div class="label">전사</div><div class="value">0.42%</div></div><div class="delta up">▼ 0.08%p</div></article>
+<article class="card"><div class="card-title"><h3>주문→출고</h3><span class="badge warn">P95 24h</span></div><div class="split-kpi"><div><div class="label">P50</div><div class="value">8.2h</div></div><div class="slash">/</div><div><div class="label">P95</div><div class="value">22.4h</div></div></div><div class="delta up">▼ P50 -1.1h</div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>센터별 UPH</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-uph"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>인력 vs 처리량</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-eff"></canvas></div></article>
+</div>
+<div class="chart-grid-1">
+<article class="chart-card"><div class="chart-head"><div><h3>시간대 히트맵 (요일×시간)</h3></div></div>
+<div class="heatmap" id="heatmap"></div>
+</article>
+</div>
+<div class="bottom-grid">
+<article class="chart-card"><div class="chart-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div><h3>오류율 추이</h3></div><select class="ch-range" data-target="ch-err" data-default="8" onchange="applyFilter()"><option value="8" selected>최근 8주</option><option value="12">최근 12주</option><option value="26">최근 26주</option><option value="52">전체 52주</option></select></div><div class="canvas-wrap"><canvas id="ch-err"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>센터·시프트</h3></div></div><div class="table-wrap"><table><thead><tr><th>센터</th><th>시프트</th><th>인력</th><th>처리량</th><th>UPH</th><th>오피킹</th></tr></thead><tbody>
+<tr><td>수도권</td><td>주간</td><td>62</td><td>26,140</td><td>105.4</td><td>0.31%</td></tr>
+<tr><td>수도권</td><td>야간</td><td>34</td><td>11,820</td><td>87.0</td><td>0.55%</td></tr>
+<tr><td>중부</td><td>주간</td><td>48</td><td>18,720</td><td>97.5</td><td>0.42%</td></tr>
+<tr><td>영남</td><td>주간</td><td>55</td><td>22,990</td><td>104.5</td><td>0.34%</td></tr>
+</tbody></table></div></article>
+</div>
+</section>
+
+<!-- 드릴다운 -->
+<section class="panel" id="drilldown">
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>카테고리별 출고 Top</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-cat"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>채널 비교</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-channel"></canvas></div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>반품 사유</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-return"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>SKU 4분면 (회전 vs 반품률)</h3></div></div><div class="canvas-wrap tall"><canvas id="ch-sku"></canvas></div></article>
+</div>
+<div class="bottom-grid">
+<article class="chart-card"><div class="chart-head"><div><h3>채널 × 카테고리</h3></div></div><div class="table-wrap"><table><thead><tr><th>카테고리</th><th>온라인</th><th>오프라인</th><th>B2B</th><th>합계</th></tr></thead><tbody>
+<tr><td>패션</td><td>5,420</td><td>1,820</td><td>980</td><td>8,220</td></tr>
+<tr><td>리빙</td><td>3,140</td><td>720</td><td>460</td><td>4,320</td></tr>
+<tr><td>식품</td><td>1,580</td><td>1,240</td><td>280</td><td>3,100</td></tr>
+<tr><td>뷰티</td><td>620</td><td>240</td><td>110</td><td>970</td></tr>
+</tbody></table></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>요약</h3></div></div><div class="table-wrap"><table><thead><tr><th>지표</th><th>값</th></tr></thead><tbody>
+<tr><td>전체 매출</td><td>1,066억 (2년)</td></tr><tr><td>패션 비중</td><td>57.4%</td></tr><tr><td>온라인 비중</td><td>63.4%</td></tr><tr><td>활성 SKU</td><td>1,840+</td></tr>
+</tbody></table></div></article>
+</div>
+</section>
+
+<!-- B9 모니터링 (Phase 2) — backtest + group_mape 시각화 -->
+<section class="panel" id="monitor">
+<div class="kpi-grid">
+<article class="card"><div class="card-title"><h3>모델 버전</h3><span class="badge ok" id="monModelBadge">live</span></div>
+<div class="split-kpi"><div><div class="label">버전</div><div class="value" id="monModelVer">-</div></div><div class="slash">/</div><div><div class="label">학습일</div><div class="value" id="monTrainAt">-</div></div></div>
+<div class="delta" id="monModelDef">cutoff: -, n_features: -</div></article>
+<article class="card"><div class="card-title"><h3>평균 MAPE (12주)</h3><span class="badge" id="monMapeBadge">-</span></div>
+<div class="split-kpi"><div><div class="label">mean</div><div class="value" id="monMapeMean">-</div></div><div class="slash">/</div><div><div class="label">P90</div><div class="value" id="monMapeP90">-</div></div></div>
+<div class="delta" id="monMapeRange">P50: - / MAX: -</div></article>
+<article class="card"><div class="card-title"><h3>Bias Sign-Streak</h3><span class="badge" id="monBiasBadge">-</span></div>
+<div class="split-kpi"><div><div class="label">연속 주차</div><div class="value" id="monBiasStreak">-</div></div><div class="slash">/</div><div><div class="label">평균 Bias</div><div class="value" id="monBiasMean">-</div></div></div>
+<div class="delta" id="monBiasDef">+ 과대예측 / - 과소예측</div></article>
+<article class="card"><div class="card-title"><h3>그룹 MAPE 30%↑</h3><span class="badge" id="monGroupBadge">-</span></div>
+<div class="split-kpi"><div><div class="label">위험 그룹</div><div class="value" id="monGroupOver30">-</div></div><div class="slash">/</div><div><div class="label">전체</div><div class="value" id="monGroupTotal">-</div></div></div>
+<div class="delta" id="monGroupMax">MAX MAPE: -</div></article>
+</div>
+<div class="chart-grid-2">
+<article class="chart-card"><div class="chart-head"><div><h3>MAPE 추이 — Walk-forward 12주</h3><p>주차별 백테스트 (B8 산출)</p></div></div><div class="canvas-wrap tall"><canvas id="ch-mon-mape"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>Bias 추이 — Sign-Streak 진단</h3><p>양: 과대예측 / 음: 과소예측</p></div></div><div class="canvas-wrap tall"><canvas id="ch-mon-bias"></canvas></div></article>
+</div>
+<div class="chart-grid-2" style="grid-template-columns:1fr">
+<article class="chart-card"><div class="chart-head"><div><h3>그룹별 MAPE 박스플롯 (B5)</h3><p>센터 / 카테고리 / 채널 — P90 30% 초과 시 임계 점선</p></div></div><div class="canvas-wrap tall" id="mon-box-wrap" style="min-height:720px"><canvas id="ch-mon-boxplot"></canvas></div></article>
+</div>
+<div class="chart-grid-2" style="grid-template-columns:1fr">
+<article class="chart-card"><div class="chart-head"><div><h3>재학습 로그 (최근 12주)</h3><p>Feature drift 패널은 v4 Sprint 3</p></div></div><div class="table-wrap" style="max-height:260px;overflow:auto"><table id="tbl-mon-log"><thead><tr><th>Fold</th><th>학습 cutoff</th><th>주차</th><th>MAPE</th><th>Bias</th><th>cov80</th><th>train rows</th></tr></thead><tbody></tbody></table></div></article>
+</div>
+</section>
+
+</main></div></div>
+
+<script>
+const css=getComputedStyle(document.documentElement);
+const C=n=>css.getPropertyValue(n).trim();
+// B15 데이터레이블: 등록 + 기본 OFF (가독성 임팩트 큰 차트만 명시적 ON)
+if(window.ChartDataLabels){Chart.register(ChartDataLabels);Chart.defaults.set('plugins.datalabels',{display:false});}
+// 글로벌 bar 디폴트 — 양 끝 막대 잘림 방지 (categoryPercentage 디폴트 0.8 -> 0.65)
+Chart.defaults.datasets.bar.categoryPercentage = 0.65;
+Chart.defaults.datasets.bar.barPercentage = 0.85;
+Chart.defaults.datasets.bar.maxBarThickness = 60;
+const DL_BAR={display:true,anchor:'end',align:'end',clip:false,color:C('--text'),font:{size:10,weight:'500'},formatter:v=>(typeof v==='number'?(v>=1000?Math.round(v).toLocaleString():(v%1===0?v:v.toFixed(1))):v)};
+const DL_BAR_INSIDE={display:true,anchor:'center',align:'center',clip:false,color:'#fff',font:{size:10,weight:'600'},formatter:v=>(typeof v==='number'?(v>=1000?Math.round(v).toLocaleString():(v%1===0?v:v.toFixed(1))):v)};
+const DL_DONUT={display:true,clip:false,color:'#fff',font:{size:11,weight:'600'},formatter:(v,ctx)=>{const t=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);const p=t?Math.round(v/t*100):0;return p>=5?(v>=1000?Math.round(v).toLocaleString():v)+'\n('+p+'%)':'';},textAlign:'center'};
+// 명시적 차트 레지스트리 — Chart.instances 가 v4 에서 비어있을 가능성 회피
+const CHART_REG = new Map();
+const _origChart = window.Chart;
+function _trackChart(canvas, cfg){
+  const c = new _origChart(canvas, cfg);
+  const id = canvas.id || canvas.canvas?.id;
+  if(id) CHART_REG.set(id, c);
+  console.log('[Chart] created:', id, 'total:', CHART_REG.size);
+  return c;
+}
+// new Chart 를 직접 트래킹 — Chart 클래스 자체는 그대로
+const common={responsive:true,maintainAspectRatio:false,layout:{padding:{top:18,right:32,bottom:6,left:32}},plugins:{legend:{labels:{color:C('--text')}}},scales:{x:{offset:true,ticks:{color:C('--muted')},grid:{display:false}},y:{ticks:{color:C('--muted')},grid:{color:'rgba(122,121,116,.14)'}}}};
+// 주간 차트들 공통 — 한국 공휴일 캘린더 + 필터 기반 동적 매핑
+// 양력 고정 공휴일 (MM-DD) + 음력 (YYYY-MM-DD, 매년 갱신 필요)
+// v4 Sprint 3: dashboard.json.holidays 또는 config.yaml.holidays 로 외부화 예정
+const KR_HOLIDAYS = {
+  '01-01':'신정','03-01':'삼일절','05-05':'어린이날','06-06':'현충일',
+  '08-15':'광복절','10-03':'개천절','10-09':'한글날','12-25':'크리스마스',
+  // 음력 (매년 갱신)
+  '2025-01-28':'설날 전날','2025-01-29':'설날','2025-01-30':'설날 다음날',
+  '2025-05-05':'어린이날','2025-10-06':'추석 전날','2025-10-07':'추석','2025-10-08':'추석 다음날',
+  '2026-02-16':'설날 전날','2026-02-17':'설날','2026-02-18':'설날 다음날',
+  '2026-09-24':'추석 전날','2026-09-25':'추석','2026-09-26':'추석 다음날'
+};
+
+// 현재 필터 기반 — 주차 선택 시에만 그 주 월요일 Date 반환, 아니면 null
+function getCurrentWeekStart(){
+  const yStr = (typeof fv === 'function' ? fv('fYear') : '');
+  const mStr = (typeof fv === 'function' ? fv('fMonth') : '');
+  const wStr = (typeof fv === 'function' ? fv('fWeek')  : '');
+  // fMonth + fWeek 둘 다 활성일 때만 valid (둘 중 하나라도 비어있거나 '전체'면 null → 일자/공휴일 미표시)
+  if(!mStr || !wStr || /^전체/.test(mStr) || /^전체/.test(wStr)) return null;
+  const yi = parseInt(yStr) || 2025;
+  const monthMap = {'1월':1,'2월':2,'3월':3,'4월':4,'5월':5,'6월':6,'7월':7,'8월':8,'9월':9,'10월':10,'11월':11,'12월':12};
+  const weekMap  = {'1주차':1,'2주차':2,'3주차':3,'4주차':4,'5주차':5};
+  const mi = monthMap[mStr]; const wi = weekMap[wStr];
+  if(!mi || !wi) return null;
+  const first = new Date(yi, mi-1, 1);
+  const dow = first.getDay();  // 0=일, 1=월, ..., 6=토
+  const offset = (dow === 0 ? 1 : (dow === 1 ? 0 : 8 - dow));
+  const firstMonday = new Date(yi, mi-1, 1 + offset);
+  const ws = new Date(firstMonday);
+  ws.setDate(firstMonday.getDate() + (wi-1)*7);
+  return ws;
+}
+
+// 그 주 7일 정보: {0:{label:'12/22', holiday:'크리스마스'|null}, ...} 또는 null (주차 미선택)
+function getWeekDates(){
+  const start = getCurrentWeekStart();
+  if(!start) return null;
+  const result = {};
+  for(let i=0; i<7; i++){
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const k1 = mm + '-' + dd;
+    const k2 = yyyy + '-' + mm + '-' + dd;
+    result[i] = {label: (parseInt(mm)) + '/' + (parseInt(dd)), holiday: KR_HOLIDAYS[k2] || KR_HOLIDAYS[k1] || null};
+  }
+  return result;
+}
+
+// 차트 ticks: 주차 선택 시 [요일, 일자, (공휴일)] 멀티라인 / 미선택 시 요일만
+const WEEK_TICK_CALLBACK = function(val, index){
+  const labels = ['월','화','수','목','금','토','일'];
+  const d = labels[index] || val;
+  const wd = getWeekDates();
+  if(!wd) return d;
+  const cell = wd[index];
+  const out = [d, cell.label];
+  if(cell.holiday) out.push(cell.holiday);
+  return out;
+};
+const WEEK_TICK_COLOR = function(ctx){
+  const i = ctx.index;
+  const wd = getWeekDates();
+  const isHoli = wd && wd[i] && wd[i].holiday;
+  return (i===5||i===6||isHoli) ? 'rgba(161,53,68,1)' : C('--muted');
+};
+const WEEK_TICK_FONT = function(ctx){
+  const i = ctx.index;
+  const wd = getWeekDates();
+  const isHoli = wd && wd[i] && wd[i].holiday;
+  return (i===5||i===6||isHoli) ? {weight:'700',size:11} : {size:10};
+};
+
+// 일별 상세 표 — 주차 선택 시 일자+공휴일 표시, 미선택 시 plain (토/일 빨강만)
+function updateWeeklyTableHolidays(){
+  const rows = Array.from(document.querySelectorAll('table[data-weekly-detail="1"] tbody tr'));
+  if(rows.length !== 7) return;
+  const wd = getWeekDates();  // null 가능
+  rows.forEach((tr, i) => {
+    const dayCell = tr.querySelector('td:first-child');
+    if(!dayCell) return;
+    const dayLabel = dayCell.getAttribute('data-day') || '';
+    const isWeekend = (i === 5 || i === 6);
+    const cell = wd ? wd[i] : null;
+    const holiday = cell ? cell.holiday : null;
+    const flagged = isWeekend || holiday;
+    tr.style.background = flagged ? 'rgba(161,53,68,.06)' : '';
+    let html = '<span style="' + (flagged ? 'color:rgba(161,53,68,1);font-weight:700' : '') + '">' + dayLabel + '</span>';
+    if(cell){
+      html += '<br><small style="display:block;font-size:.72em;color:rgba(122,121,116,.85);font-weight:500">' + cell.label + '</small>';
+    }
+    if(holiday){
+      html += '<br><small style="display:block;font-size:.72em;color:rgba(161,53,68,.85);font-weight:600">' + holiday + '</small>';
+    }
+    dayCell.innerHTML = html;
+  });
+}
+
+_trackChart(document.getElementById('ch-summary-week'),{type:'bar',data:{labels:['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20','W21','W22','W23','W24','W25','W26','W27','W28','W29','W30','W31','W32','W33','W34','W35','W36','W37','W38','W39','W40','W41','W42','W43','W44','W45','W46','W47','W48','W49','W50','W51','W52'],datasets:[
+{label:'입고(K)',data:[10.4,10.2,10.4,10.5,10.8,10.9,11.1,10.9,11.2,11.2,11.5,11.8,11.7,12.0,12.4,12.5,12.5,12.8,13.1,12.8,13.4,13.4,13.3,13.3,13.8,13.5,13.4,13.4,13.8,13.7,13.7,13.6,13.4,13.6,13.2,13.2,13.2,13.0,13.0,12.7,12.7,12.2,12.2,12.1,11.9,11.9,11.8,11.8,12.0,11.8,11.8,11.8],backgroundColor:'rgba(1,105,111,.82)'},
+{label:'출고(K)',data:[11.4,11.8,11.7,11.8,11.8,12.2,12.1,12.4,12.9,12.9,13.1,13.4,13.8,14.0,13.9,14.0,14.4,14.6,14.8,15.4,15.6,15.4,15.7,15.7,16.1,15.8,15.8,15.8,15.9,15.7,15.9,16.0,15.6,15.3,15.7,15.2,14.8,14.7,14.5,14.7,14.6,14.2,13.9,13.9,14.1,13.7,13.9,13.7,13.2,13.6,13.6,13.5],backgroundColor:'rgba(42,127,131,.68)'},
+{label:'반품(K)',data:[0.4,0.43,0.38,0.41,0.42,0.47,0.46,0.4,0.42,0.39,0.46,0.46,0.4,0.43,0.43,0.39,0.45,0.42,0.45,0.42,0.37,0.4,0.37,0.46,0.46,0.45,0.4,0.38,0.46,0.46,0.38,0.42,0.38,0.45,0.45,0.38,0.42,0.42,0.4,0.46,0.41,0.39,0.42,0.44,0.39,0.4,0.47,0.43,0.41,0.42,0.38,0.39],backgroundColor:'rgba(209,153,0,.8)'}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR}}});
+
+_trackChart(document.getElementById('ch-fcst-actual'),{type:'line',data:{labels:['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20','W21','W22','W23','W24','W25','W26','W27','W28','W29','W30','W31','W32','W33','W34','W35','W36','W37','W38','W39','W40','W41','W42','W43','W44','W45','W46','W47','W48','W49','W50','W51','W52'],datasets:[
+{label:'예측(K)',data:[11.4,11.6,11.6,11.7,11.8,12.1,12.2,12.6,12.8,12.7,13.0,13.4,13.5,13.7,14.2,14.3,14.5,14.9,15.1,15.0,15.2,15.4,15.6,15.7,15.9,15.9,16.1,15.8,15.9,15.8,16.0,15.6,15.5,15.5,15.4,15.2,15.0,15.1,14.7,14.7,14.4,14.1,14.3,14.1,14.0,13.9,13.7,13.4,13.5,13.4,13.4,13.4],borderColor:C('--primary'),tension:.3,pointRadius:2},
+{label:'실적(K)',data:[11.3,11.9,11.4,11.9,11.8,12.0,12.5,13.0,12.8,12.9,12.7,13.2,13.9,13.8,14.2,14.5,14.1,15.0,15.1,15.3,14.9,15.8,15.2,15.4,16.0,16.1,15.8,15.4,16.3,15.6,16.1,15.7,15.4,15.6,15.4,15.6,14.7,15.3,14.5,14.6,14.5,13.9,14.1,14.3,13.6,13.9,14.1,13.8,13.2,13.2,13.2,null],borderColor:C('--warning'),tension:.3,pointRadius:2}]},options:common});
+
+// 주평균 line — mock 정적 (실데이터 연동 시 build_dashboard_data.py 에서 계산해서 dashboard.json 에 저장 → 동적 바인딩 예정)
+_trackChart(document.getElementById('ch-daily-combo'),{data:{labels:['월','화','수','목','금','토','일'],datasets:[
+{type:'bar',label:'실입고',data:[421,368,431,486,498,439,383],backgroundColor:'rgba(1,105,111,.85)'},
+{type:'bar',label:'실출고',data:[458,439,476,508,571,499,470],backgroundColor:'rgba(42,127,131,.82)'},
+{type:'line',label:'실입고 주평균',data:[432,432,432,432,432,432,432],borderColor:C('--warning'),borderDash:[6,5],pointRadius:0}]},
+options:{...common,
+  scales:{...common.scales,
+    x:{...common.scales.x, ticks:{callback:WEEK_TICK_CALLBACK, color:WEEK_TICK_COLOR, font:WEEK_TICK_FONT}, grid:{display:false}}
+  },
+  plugins:{...common.plugins,datalabels:{...DL_BAR,display:ctx=>ctx.dataset.type==='bar'}}}});
+
+_trackChart(document.getElementById('ch-daily-var'),{type:'bar',data:{labels:['월','화','수','목','금','토','일'],datasets:[
+{label:'입고편차',data:[-9,-52,-14,-14,-17,-16,-32],backgroundColor:'rgba(161,53,68,.72)'},
+{label:'출고편차',data:[-12,-16,-14,-17,11,-16,-55],backgroundColor:'rgba(79,152,163,.85)'}]},
+options:{...common,
+  scales:{...common.scales,
+    x:{...common.scales.x, ticks:{callback:WEEK_TICK_CALLBACK, color:WEEK_TICK_COLOR, font:WEEK_TICK_FONT}, grid:{display:false}}
+  },
+  plugins:{...common.plugins,datalabels:DL_BAR}}});
+
+_trackChart(document.getElementById('ch-month-grp'),{type:'bar',data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[
+{label:'실입고',data:[46.6,46.7,48.2,49.2,49.9,51.3,53.4,55.7,54.1,56.0,60.4,63.8],backgroundColor:'rgba(1,105,111,.85)'},
+{label:'실출고',data:[53.1,53.8,54.8,55.6,56.7,57.9,60.1,63.2,60.8,62.9,67.5,71.4],backgroundColor:'rgba(42,127,131,.82)'}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR}}});
+
+_trackChart(document.getElementById('ch-month-var'),{type:'bar',data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[
+{label:'입고편차',data:[-2.4,-2.8,-2.1,-2.0,-2.2,-2.5,-2.7,-3.0,-2.4,-2.6,-3.2,-3.4],backgroundColor:'rgba(161,53,68,.72)'},
+{label:'출고편차',data:[-2.1,-2.3,-1.9,-1.7,-1.7,-2.0,-2.4,-2.6,-1.8,-2.1,-2.7,-2.9],backgroundColor:'rgba(79,152,163,.85)'}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR}}});
+
+_trackChart(document.getElementById('ch-month-line'),{type:'line',data:{labels:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],datasets:[
+{label:'실출고',data:[53.1,53.8,54.8,55.6,56.7,57.9,60.1,63.2,60.8,62.9,67.5,71.4],borderColor:C('--primary'),tension:.35},
+{label:'목표',data:[54,54.5,55,55.5,56,57.5,59.5,62.0,60.5,62.5,66.5,70.0],borderColor:C('--warning'),borderDash:[6,5],pointRadius:0},
+{label:'전년동월',data:[51.4,52.1,53.2,54.0,55.1,56.3,58.5,60.2,59.1,61.0,65.6,69.3],borderColor:C('--faint'),borderDash:[2,4],pointRadius:0}]},options:common});
+
+_trackChart(document.getElementById('ch-inv-trend'),{data:{labels:['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20','W21','W22','W23','W24','W25','W26','W27','W28','W29','W30','W31','W32','W33','W34','W35','W36','W37','W38','W39','W40','W41','W42','W43','W44','W45','W46','W47','W48','W49','W50','W51','W52'],datasets:[
+{type:'bar',label:'재고(K)',data:[275.0,275.0,273.0,272.0,277.0,277.0,278.0,282.0,282.0,280.0,286.0,285.0,289.0,293.0,290.0,292.0,294.0,298.0,298.0,301.0,303.0,301.0,304.0,303.0,304.0,307.0,306.0,301.0,302.0,301.0,298.0,301.0,299.0,295.0,295.0,292.0,290.0,285.0,283.0,286.0,284.0,279.0,279.0,276.0,272.0,270.0,270.0,272.0,270.0,270.0,270.0,266.0],backgroundColor:'rgba(1,105,111,.45)'},
+{type:'line',label:'일평균출고(K)',data:[11.9,11.9,12.1,12.2,12.2,12.4,12.4,12.8,12.9,13.1,13.3,13.5,13.5,13.9,13.9,14.3,14.4,14.6,14.8,14.8,15.1,15.0,15.3,15.4,15.3,15.5,15.4,15.4,15.5,15.3,15.2,15.1,15.1,15.2,15.1,14.7,14.7,14.5,14.5,14.3,14.2,13.9,14.0,13.6,13.7,13.4,13.3,13.3,13.4,13.2,13.3,13.3],borderColor:C('--warning'),tension:.3,yAxisID:'y1',pointRadius:2}]},
+options:{...common,plugins:{...common.plugins,datalabels:{...DL_BAR,display:ctx=>ctx.dataset.type==='bar'}},scales:{x:{ticks:{color:C('--muted')},grid:{display:false}},y:{position:'left',ticks:{color:C('--muted')}},y1:{position:'right',ticks:{color:C('--muted')},grid:{display:false}}}}});
+
+_trackChart(document.getElementById('ch-inv-health'),{type:'doughnut',data:{labels:['건전','결품위험','과재','데드'],datasets:[{data:[1582,42,91,37],backgroundColor:['rgba(67,122,34,.78)','rgba(161,53,68,.78)','rgba(209,153,0,.78)','rgba(122,121,116,.55)']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:C('--text')}},datalabels:DL_DONUT}}});
+
+_trackChart(document.getElementById('ch-center-doi'),{type:'bar',data:{labels:['수도권','중부','영남','남부'],datasets:[
+{label:'DOI(일)',data:[18.4,24.2,17.8,21.6],backgroundColor:'rgba(67,122,34,.78)'}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR}}});
+
+_trackChart(document.getElementById('ch-abc'),{type:'bar',data:{labels:['A','B','C'],datasets:[
+{label:'출고기여%',data:[78,17,5],backgroundColor:'rgba(1,105,111,.85)',categoryPercentage:0.6,barPercentage:0.88},
+{label:'재고점유%',data:[42,33,25],backgroundColor:'rgba(209,153,0,.78)',categoryPercentage:0.6,barPercentage:0.88}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR_INSIDE}}});
+
+const fL=['D-3','D-2','D-1','D0','D+1','D+2','D+3','D+4','D+5','D+6','D+7','D+8','D+9','D+10'];
+_trackChart(document.getElementById('ch-fcst'),{type:'line',data:{labels:fL,datasets:[
+{label:'95% 상한',data:[13.6,14.2,14.5,14.4,15.8,16.0,15.6,15.3,16.4,16.7,16.3,15.9,16.7,17.0],borderColor:'transparent',backgroundColor:'rgba(1,105,111,.08)',fill:3,pointRadius:0,tension:.3},
+{label:'80% 상한',data:[13.4,13.9,14.2,14.1,15.2,15.4,15.0,14.7,15.7,16.0,15.6,15.2,16.0,16.2],borderColor:'transparent',backgroundColor:'rgba(1,105,111,.22)',fill:2,pointRadius:0,tension:.3},
+{label:'80% 하한',data:[12.6,13.1,13.4,13.3,13.5,13.6,13.4,13.1,13.8,14.1,13.8,13.4,14.0,14.1],borderColor:'transparent',pointRadius:0,tension:.3},
+{label:'95% 하한',data:[12.4,12.8,13.1,13.0,12.9,13.0,12.8,12.6,13.2,13.4,13.2,12.8,13.3,13.4],borderColor:'transparent',pointRadius:0,tension:.3},
+{label:'점추정',data:[13.0,13.5,13.8,13.7,14.4,14.6,14.2,13.9,14.8,15.1,14.7,14.3,15.0,15.2],borderColor:C('--primary'),borderWidth:2.5,tension:.3},
+{label:'실적',data:[13.1,13.7,14.0,13.7,null,null,null,null,null,null,null,null,null,null],borderColor:C('--warning'),borderWidth:2.5,pointRadius:4}]},options:{...common,plugins:{...common.plugins,legend:{labels:{color:C('--text'),filter:i=>!/하한/.test(i.text)}}}}});
+
+_trackChart(document.getElementById('ch-model-cmp'),{type:'line',data:{labels:['W-8','W-7','W-6','W-5','W-4','W-3','W-2','W-1'],datasets:[
+{label:'Baseline',data:[14.2,13.5,12.6,15.1,14.0,13.2,14.6,12.9],borderColor:C('--faint'),borderDash:[5,4],tension:.3},
+{label:'Prophet',data:[13.0,12.7,12.1,13.6,13.0,12.5,13.5,12.6],borderColor:C('--primary2'),tension:.3},
+{label:'LightGBM',data:[12.3,12.7,12.4,13.2,13.0,13.4,13.7,12.8],borderColor:C('--primary'),borderWidth:2.5,tension:.3},
+{label:'실적',data:[12.2,12.6,12.4,13.1,13.0,13.4,13.7,12.7],borderColor:C('--warning'),tension:.3}]},options:common});
+
+_trackChart(document.getElementById('ch-feat-imp'),{type:'bar',data:{labels:['lag_7','promo','weekday','ma_28','holiday','stock','trend','weather','channel'],datasets:[
+{label:'중요도',data:[0.28,0.22,0.16,0.11,0.09,0.06,0.04,0.025,0.02],backgroundColor:'rgba(1,105,111,.85)'}]},options:{...common,indexAxis:'y',plugins:{...common.plugins,datalabels:{...DL_BAR,formatter:v=>(v*100).toFixed(0)+'%'}}}});
+
+_trackChart(document.getElementById('ch-fcst-channel'),{type:'bar',data:{labels:['D+1','D+2','D+3','D+4','D+5','D+6','D+7'],datasets:[
+{label:'온라인',data:[8.2,8.6,8.4,8.1,8.9,9.2,8.8],backgroundColor:'rgba(1,105,111,.85)'},
+{label:'오프라인',data:[3.1,3.0,3.0,3.0,3.2,3.3,3.0],backgroundColor:'rgba(42,127,131,.65)'},
+{label:'B2B',data:[3.1,3.0,2.8,2.8,2.7,2.6,2.9],backgroundColor:'rgba(209,153,0,.7)'}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR_INSIDE},scales:{...common.scales,x:{stacked:true,...common.scales.x},y:{stacked:true,...common.scales.y}}}});
+
+function updateWifi(){
+const p=+document.getElementById('wifPromo').value,r=+document.getElementById('wifRain').value,h=+document.getElementById('wifHoliday').value;
+document.getElementById('wifPromoVal').textContent='+'+p+'%';
+document.getElementById('wifRainVal').textContent=r+'mm';
+document.getElementById('wifHolidayVal').textContent=(h>0?'+':'')+h+'%';
+const base=14360,adj=base*(1+p*.012-r*.003+h*.008),diff=((adj-base)/base*100).toFixed(1);
+document.getElementById('wifResult').textContent=base.toLocaleString()+' → '+Math.round(adj).toLocaleString()+' ('+(diff>0?'+':'')+diff+'%)';
+document.getElementById('wifHC').textContent='+'+Math.max(0,Math.round((adj-base)/95))+'명';
+}
+['wifPromo','wifRain','wifHoliday'].forEach(id=>document.getElementById(id).addEventListener('input',updateWifi));
+
+_trackChart(document.getElementById('ch-uph'),{type:'bar',data:{labels:['수도권','중부','영남','남부'],datasets:[
+{label:'피킹',data:[105,98,104,99],backgroundColor:'rgba(1,105,111,.85)'},
+{label:'패킹',data:[96,92,98,94],backgroundColor:'rgba(42,127,131,.65)'},
+{label:'검수',data:[88,85,90,87],backgroundColor:'rgba(209,153,0,.75)'}]},options:{...common,plugins:{...common.plugins,datalabels:DL_BAR_INSIDE}}});
+
+_trackChart(document.getElementById('ch-eff'),{type:'scatter',data:{datasets:[{label:'센터일별',data:[
+{x:62,y:26140},{x:34,y:11820},{x:48,y:18720},{x:22,y:7260},{x:55,y:22990},{x:40,y:15840},
+{x:60,y:24200},{x:33,y:11000},{x:46,y:17500},{x:24,y:7800}],backgroundColor:'rgba(1,105,111,.7)'}]},options:common});
+
+_trackChart(document.getElementById('ch-err'),{type:'line',data:{labels:['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20','W21','W22','W23','W24','W25','W26','W27','W28','W29','W30','W31','W32','W33','W34','W35','W36','W37','W38','W39','W40','W41','W42','W43','W44','W45','W46','W47','W48','W49','W50','W51','W52'],datasets:[
+{label:'피킹',data:[0.39,0.4,0.39,0.41,0.37,0.43,0.4,0.41,0.41,0.41,0.39,0.37,0.41,0.39,0.39,0.42,0.41,0.39,0.39,0.39,0.39,0.39,0.38,0.4,0.43,0.41,0.42,0.41,0.39,0.4,0.37,0.39,0.4,0.4,0.41,0.4,0.4,0.38,0.4,0.42,0.42,0.38,0.38,0.4,0.41,0.39,0.42,0.42,0.41,0.38,0.38,0.37],borderColor:'rgba(1,105,111,1)',tension:.3,pointRadius:2},
+{label:'패킹',data:[0.29,0.3,0.32,0.28,0.3,0.31,0.28,0.31,0.3,0.29,0.31,0.28,0.31,0.31,0.28,0.3,0.28,0.32,0.3,0.28,0.29,0.32,0.3,0.32,0.31,0.32,0.3,0.32,0.32,0.31,0.31,0.3,0.32,0.3,0.32,0.31,0.3,0.29,0.29,0.31,0.31,0.3,0.31,0.29,0.28,0.29,0.29,0.29,0.3,0.28,0.29,0.31],borderColor:'rgba(42,127,131,1)',tension:.3,pointRadius:2},
+{label:'검수',data:[0.21,0.18,0.2,0.2,0.2,0.19,0.2,0.22,0.2,0.21,0.21,0.21,0.2,0.18,0.19,0.21,0.21,0.22,0.2,0.21,0.2,0.2,0.19,0.19,0.2,0.18,0.19,0.21,0.2,0.19,0.2,0.19,0.2,0.18,0.2,0.2,0.18,0.21,0.19,0.2,0.18,0.2,0.19,0.19,0.21,0.2,0.21,0.21,0.19,0.18,0.18,0.2],borderColor:'rgba(209,153,0,1)',tension:.3,pointRadius:2},
+{label:'오배송',data:[0.19,0.17,0.18,0.19,0.18,0.18,0.19,0.17,0.16,0.16,0.16,0.18,0.17,0.16,0.18,0.18,0.16,0.17,0.17,0.15,0.17,0.18,0.15,0.15,0.16,0.17,0.17,0.16,0.16,0.14,0.16,0.16,0.14,0.16,0.16,0.16,0.14,0.17,0.16,0.15,0.15,0.14,0.15,0.14,0.16,0.16,0.13,0.16,0.15,0.15,0.15,0.14],borderColor:C('--warning'),tension:.3,pointRadius:2}]},options:common});
+
+const heat=document.getElementById('heatmap'),days=['월','화','수','목','금','토','일'];
+const blank=document.createElement('div');blank.className='axis';heat.appendChild(blank);
+for(let h=0;h<24;h++){const c=document.createElement('div');c.className='axis';c.textContent=h;heat.appendChild(c);}
+days.forEach((d,di)=>{const lbl=document.createElement('div');lbl.className='label';lbl.textContent=d;heat.appendChild(lbl);
+for(let h=0;h<24;h++){let v=.1+.4*Math.sin((h-3)/12*Math.PI)+(di===4?.25:0);if(h<6||h>22)v*=.3;
+const cell=document.createElement('div');cell.className='cell';cell.style.background='rgba(1,105,111,'+Math.max(.05,Math.min(.95,v)).toFixed(2)+')';heat.appendChild(cell);}});
+
+_trackChart(document.getElementById('ch-cat'),{type:'bar',data:{labels:['패션','리빙','식품','뷰티'],datasets:[
+{label:'출고',data:[8220,4320,3100,920],backgroundColor:'rgba(1,105,111,.82)'},
+{label:'반품',data:[290,140,80,38],backgroundColor:'rgba(209,153,0,.7)'}]},
+options:{...common, plugins:{...common.plugins, datalabels:DL_BAR}}});
+
+_trackChart(document.getElementById('ch-channel'),{type:'doughnut',data:{labels:['온라인','오프라인','B2B'],datasets:[{data:[10960,4120,1900],backgroundColor:['rgba(1,105,111,.85)','rgba(42,127,131,.7)','rgba(209,153,0,.75)']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C('--text')}},datalabels:DL_DONUT}}});
+
+_trackChart(document.getElementById('ch-return'),{type:'doughnut',data:{labels:['사이즈','단순변심','품질','오배송'],datasets:[{data:[180,140,52,28],backgroundColor:['rgba(1,105,111,.85)','rgba(42,127,131,.7)','rgba(161,53,68,.72)','rgba(209,153,0,.75)']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C('--text')}},datalabels:DL_DONUT}}});
+
+// SKU 4분면 — mock: 카테고리별 색 + label 부여 (실데이터 연동 시 build_dashboard_data.py 가 SKU 회전율/반품률 산출 → 카테고리 자동 매핑)
+_trackChart(document.getElementById('ch-sku'),{type:'scatter',data:{datasets:[
+{label:'패션', data:[{x:35,y:2.4,id:'F-2031'},{x:42,y:3.8,id:'F-1108'},{x:38,y:2.9,id:'F-2245'}], backgroundColor:'rgba(1,105,111,.78)', pointRadius:7, pointHoverRadius:10},
+{label:'리빙', data:[{x:22,y:1.2,id:'L-0412'},{x:18,y:1.1,id:'L-0888'},{x:26,y:1.5,id:'L-0331'}], backgroundColor:'rgba(42,127,131,.78)', pointRadius:7, pointHoverRadius:10},
+{label:'식품', data:[{x:14,y:0.5,id:'G-3201'},{x:11,y:0.6,id:'G-3454'},{x:8,y:0.8,id:'G-3620'}], backgroundColor:'rgba(67,122,34,.72)', pointRadius:7, pointHoverRadius:10},
+{label:'뷰티', data:[{x:9,y:4.2,id:'B-7702'}], backgroundColor:'rgba(209,153,0,.85)', pointRadius:7, pointHoverRadius:10}
+]},
+options:{...common,
+  scales:{
+    x:{...common.scales.x, beginAtZero:true, title:{display:true,text:'회전율 (회/월) →',color:C('--muted'),font:{size:11,weight:'600'}}},
+    y:{...common.scales.y, beginAtZero:true, title:{display:true,text:'반품률 (%) ↑',color:C('--muted'),font:{size:11,weight:'600'}}}
+  },
+  plugins:{...common.plugins,
+    tooltip:{callbacks:{label:function(ctx){const r=ctx.raw;return (ctx.dataset.label||'')+' · '+(r.id||'')+' · 회전 '+r.x+', 반품 '+r.y+'%';}}},
+    datalabels:{display:false}
+  }}});
+
+// 주간 — 출고 채널별 (요일×채널 stacked, 실 vs 예측 그룹화) + 주말 강조
+_trackChart(document.getElementById('ch-weekly-channel'),{type:'bar',data:{labels:['월','화','수','목','금','토','일'],datasets:[
+// 실 stack
+// 예측 stack 먼저 (왼쪽 막대) — 옅은 색 + 점선
+{label:'온라인 (예측)', data:[300,286,312,332,372,326,308], backgroundColor:'rgba(1,105,111,.38)', borderColor:'rgba(1,105,111,1)', borderWidth:1.5, borderDash:[3,3], stack:'forecast'},
+{label:'오프라인 (예측)', data:[126,120,132,145,162,142,131], backgroundColor:'rgba(42,127,131,.32)', borderColor:'rgba(42,127,131,1)', borderWidth:1.5, borderDash:[3,3], stack:'forecast'},
+{label:'B2B (예측)', data:[47,46,47,47,53,46,46], backgroundColor:'rgba(209,153,0,.34)', borderColor:'rgba(209,153,0,1)', borderWidth:1.5, borderDash:[3,3], stack:'forecast'},
+// 실 stack 나중 (오른쪽 막대) — 진한 색
+{label:'온라인 (실)', data:[290,278,302,322,361,316,298], backgroundColor:'rgba(1,105,111,.88)', stack:'real'},
+{label:'오프라인 (실)', data:[122,116,128,141,158,138,127], backgroundColor:'rgba(42,127,131,.82)', stack:'real'},
+{label:'B2B (실)', data:[46,45,46,45,52,45,45], backgroundColor:'rgba(209,153,0,.82)', stack:'real'}]},
+options:{...common,
+  scales:{
+    x:{...common.scales.x, stacked:true,
+       ticks:{callback:WEEK_TICK_CALLBACK, color:WEEK_TICK_COLOR, font:WEEK_TICK_FONT},
+       grid:{display:false}},
+    y:{...common.scales.y, stacked:true, beginAtZero:true, min:0}
+  },
+  plugins:{...common.plugins, datalabels:{
+    display:ctx=>{const v=ctx.dataset.data[ctx.dataIndex];return typeof v==='number'&&v>=70;},
+    anchor:'center', align:'center', clip:true,
+    color:ctx=>ctx.dataset.stack==='forecast'?'rgba(60,60,60,1)':'#fff',
+    font:{size:9,weight:'600'},
+    formatter:v=>Math.round(v)
+  }}}});
+
+// 주간 — 요일별 입고 예정 vs 실 (+ 주말 강조)
+_trackChart(document.getElementById('ch-weekly-inbound'),{type:'bar',data:{labels:['월','화','수','목','금','토','일'],datasets:[
+{label:'예정', data:[430,420,445,500,515,455,415], backgroundColor:'rgba(122,121,116,.55)'},
+{label:'실', data:[421,368,431,486,498,439,383], backgroundColor:'rgba(1,105,111,.82)'}]},
+options:{...common,
+  scales:{
+    x:{...common.scales.x,
+       ticks:{callback:WEEK_TICK_CALLBACK, color:WEEK_TICK_COLOR, font:WEEK_TICK_FONT},
+       grid:{display:false}},
+    y:common.scales.y
+  },
+  plugins:{...common.plugins, datalabels:DL_BAR}}});
+
+// ===== 필터 엔진 v2 (차트별 분기: 곱셈/강조/rolling-center/제외) =====
+const CHART_BACKUP=new Map(),KPI_BACKUP=new Map();
+function backupOnce(){
+  if(CHART_BACKUP.size>0)return;
+  CHART_REG.forEach((ch,id)=>{CHART_BACKUP.set(id,JSON.parse(JSON.stringify(ch.data)));});
+  document.querySelectorAll('.split-kpi .value,.single-kpi .value').forEach(el=>{KPI_BACKUP.set(el,el.textContent);});
+}
+// 가중치 테이블 (필터별)
+const FW = {
+  fYear:    {'2024년':0.45,'2025년':1.0,'2026년':0.05},
+  fCenter:  {'전체 센터':1.0,'수도권 메가':0.30,'중부 허브':0.22,'영남 스마트':0.28,'남부 풀필먼트':0.20},
+  fCategory:{'전체 카테고리':1.0,'패션':0.574,'리빙':0.223,'식품':0.072,'뷰티':0.131},
+  fChannel: {'전체 채널':1.0,'온라인':0.634,'오프라인':0.234,'B2B':0.132},
+  fMonth:   {'전체 월':1.0,'1월':0.85,'2월':0.78,'3월':0.83,'4월':0.85,'5월':0.88,'6월':0.92,'7월':0.96,'8월':1.05,'9월':1.02,'10월':1.10,'11월':1.18,'12월':1.20},
+  fWeek:    {'전체 주차':1.0,'1주차':0.96,'2주차':0.99,'3주차':1.02,'4주차':1.05,'5주차':1.08},
+};
+function fv(id){return document.getElementById(id).value;}
+function isAll(id){const v=fv(id);return !v||v.startsWith('전체')||/^\d+년$/.test(v)===false&&id==='fYear'?(/^\d+년$/.test(v)?false:true):false;}
+function activeFilters(){
+  const out={};
+  ['fYear','fMonth','fWeek','fCenter','fCategory','fChannel'].forEach(id=>{
+    const v=fv(id);
+    if(v&&!v.startsWith('전체')) out[id]=v;
+  });
+  return out;
+}
+// 차트별 기간 선택 select 읽기 + 글로벌 fMonth+fWeek 결합
+function getWeekWindow(chartId, totalLen, defaultRolling){
+  const sel = document.querySelector(`select.ch-range[data-target="${chartId}"]`);
+  const winSize = sel ? Math.min(parseInt(sel.value)||defaultRolling, totalLen) : defaultRolling;
+  const tw = targetWeek();
+  const half = Math.floor((winSize-1)/2);
+  if(tw){
+    let start = Math.max(0, tw-1 - half);
+    let end = start + winSize;
+    if(end > totalLen){ end = totalLen; start = Math.max(0, end - winSize); }
+    return {start, end, centered:true};
+  } else {
+    // 글로벌 주 필터 없음 — 마지막 N주
+    return {start: Math.max(0, totalLen - winSize), end: totalLen, centered:false};
+  }
+}
+// fMonth × fWeek → target_week_idx (1~52)
+// 단일값 (rolling window 중심 계산용)
+function targetWeek(){
+  const m=fv('fMonth'), w=fv('fWeek');
+  const monthMap={'1월':1,'2월':2,'3월':3,'4월':4,'5월':5,'6월':6,'7월':7,'8월':8,'9월':9,'10월':10,'11월':11,'12월':12};
+  const weekMap ={'1주차':1,'2주차':2,'3주차':3,'4주차':4,'5주차':5};
+  const mi=monthMap[m]||null, wi=weekMap[w]||null;
+  if(mi&&wi) return Math.min(52,(mi-1)*4 + wi);
+  if(mi&&!wi) return Math.min(52,(mi-1)*4 + 2);  // 월 중앙 = 2주차로 윈도우 중심
+  if(!mi&&wi) return Math.min(52,wi);
+  return null;
+}
+// 다중값 (강조 매칭용) — 월만 선택 시 그 월 4주 모두 강조
+function targetWeeks(){
+  const m=fv('fMonth'), w=fv('fWeek');
+  const monthMap={'1월':1,'2월':2,'3월':3,'4월':4,'5월':5,'6월':6,'7월':7,'8월':8,'9월':9,'10월':10,'11월':11,'12월':12};
+  const weekMap ={'1주차':1,'2주차':2,'3주차':3,'4주차':4,'5주차':5};
+  const mi=monthMap[m]||null, wi=weekMap[w]||null;
+  if(mi&&wi) return [Math.min(52,(mi-1)*4 + wi)];          // 월+주차 = 단일
+  if(mi&&!wi){                                              // 월만 = 그 월 4주 모두 (W(m-1)*4+1 ~ W(m-1)*4+4)
+    const base=(mi-1)*4;
+    return [base+1,base+2,base+3,base+4].filter(x=>x>=1&&x<=52);
+  }
+  if(!mi&&wi) return [Math.min(52,wi)];                    // 주차만 = 단일
+  return [];
+}
+// 차트별 메타: highlight 차원, exclude 필터, rolling 윈도우
+// dim:  'month' / 'week' / 'center' / 'category' / 'channel' / null
+// rolling: window 크기 (없으면 미적용)
+// exclude: 'all' or [필터 id 배열]
+const CHART_META = {
+  // 종합현황
+  'ch-summary-week': {dim:'week',     rolling:12, labelMap:'W'},
+  'ch-fcst-actual':  {dim:'week',     rolling:8,  labelMap:'W'},
+  // 주간
+  'ch-daily-combo':    {},
+  'ch-daily-var':      {},
+  'ch-weekly-channel': {},   // 채널 stacked, 곱셈 가중치만
+  'ch-weekly-inbound': {},   // 요일별 입고 예정/실
+  // 월별 — fMonth 필터시 강조-only
+  'ch-month-grp':    {dim:'month',    labelMap:'month'},
+  'ch-month-var':    {dim:'month',    labelMap:'month'},
+  'ch-month-line':   {dim:'month',    labelMap:'month'},
+  // 재고
+  'ch-inv-trend':    {dim:'week',     rolling:8,  labelMap:'W'},
+  'ch-inv-health':   {},
+  'ch-center-doi':   {dim:'center',   labelMap:'center'},
+  'ch-abc':          {exclude:['fCategory']},
+  // 예측
+  'ch-fcst':         {},
+  'ch-model-cmp':    {exclude:'all'},
+  'ch-feat-imp':     {exclude:'all'},
+  'ch-fcst-channel': {dim:'channel',  labelMap:'channel'},
+  // 생산성
+  'ch-uph':          {dim:'center',   labelMap:'center'},
+  'ch-eff':          {},
+  'ch-err':          {dim:'week',     rolling:8,  labelMap:'W'},
+  // 드릴다운
+  'ch-cat':          {dim:'category', labelMap:'category'},
+  'ch-channel':      {dim:'channel',  labelMap:'channel'},
+  'ch-return':       {},
+  'ch-sku':          {},
+  // 모니터링 — 모델 진단 글로벌, 필터 제외
+  'ch-mon-mape':         {exclude:'all'},
+  'ch-mon-bias':         {exclude:'all'},
+  'ch-mon-boxplot':      {exclude:'all'},  // fallback (플러그인 미로드 시) bar
+  'ch-mon-box-center':   {exclude:'all'},  // 박스플롯 3축
+  'ch-mon-box-category': {exclude:'all'},
+  'ch-mon-box-channel':  {exclude:'all'},
+};
+// 라벨 → 차원값 매칭 함수
+function labelMatches(label, filterValue, dim){
+  if(!filterValue) return false;
+  if(dim==='month'){
+    return label === filterValue;  // '3월' === '3월'
+  }
+  if(dim==='week'){
+    // W10 vs '3월 2주차' (target=10) — 월만 선택 시엔 그 월 4주 모두 매칭
+    const tws=targetWeeks(); if(!tws.length) return false;
+    const wm=label.match(/^W(\d+)$/); if(!wm) return false;
+    return tws.includes(parseInt(wm[1]));
+  }
+  if(dim==='center'){
+    const map={'수도권 메가':'수도권','중부 허브':'중부','영남 스마트':'영남','남부 풀필먼트':'남부'};
+    return label === (map[filterValue]||filterValue);
+  }
+  if(dim==='category'){return label === filterValue;}
+  if(dim==='channel'){
+    const map={'온라인':'온라인','오프라인':'오프라인','B2B':'B2B'};
+    return label === (map[filterValue]||filterValue);
+  }
+  return false;
+}
+// 색상 dim 처리
+function dimColor(orig){
+  if(typeof orig!=='string') return 'rgba(186,185,180,.25)';
+  // rgba(r,g,b,a) → rgba(120,119,116,.18)
+  return 'rgba(122,121,116,.25)'; // 비매칭 dim — 살짝 진하게
+}
+function applyFilter(){
+  backupOnce();
+  const af = activeFilters();
+  const tw = targetWeek();
+  CHART_REG.forEach((ch,_id)=>{
+    const b = CHART_BACKUP.get(_id); if(!b) return;
+    const meta = CHART_META[_id] || {};
+    // ★ 매번 backup 으로 명시적 reset (이전 modify 흔적 제거)
+    ch.data.labels = b.labels.slice();
+    ch.data.datasets.forEach((ds,i)=>{
+      const o = b.datasets[i]; if(!o) return;
+      ds.data = o.data.slice();
+      if(o.backgroundColor !== undefined) ds.backgroundColor = Array.isArray(o.backgroundColor) ? o.backgroundColor.slice() : o.backgroundColor;
+      if(o.borderColor !== undefined) ds.borderColor = Array.isArray(o.borderColor) ? o.borderColor.slice() : o.borderColor;
+      else delete ds.borderColor;
+      if(o.borderWidth !== undefined) ds.borderWidth = Array.isArray(o.borderWidth) ? o.borderWidth.slice() : o.borderWidth;
+      else delete ds.borderWidth;
+    });
+    // 1) exclude 처리
+    if(meta.exclude === 'all'){
+      ch.update(); return;
+    }
+    // 2) 곱셈 factor 계산 (exclude 필터 / dim 필터는 곱셈에서 제외)
+    const skipKeys = new Set(meta.exclude||[]);
+    if(meta.dim==='month') {skipKeys.add('fMonth'); skipKeys.add('fWeek');} // 월별 차트는 주차 영향 X
+    if(meta.dim==='week')  {skipKeys.add('fWeek'); skipKeys.add('fMonth');}
+    if(meta.dim==='center')skipKeys.add('fCenter');
+    if(meta.dim==='category') skipKeys.add('fCategory');
+    if(meta.dim==='channel') skipKeys.add('fChannel');
+    let f=1;
+    for(const [k,tab] of Object.entries(FW)){
+      if(skipKeys.has(k)) continue;
+      const v=fv(k); if(!v||v.startsWith('전체')) continue;
+      f *= (tab[v]??1);
+    }
+    // 3) rolling 처리 (차트 내부 select + 글로벌 fMonth+fWeek 조합)
+    let labels = b.labels.slice();
+    let datasetsData = b.datasets.map(d=>d.data.slice());
+    if(meta.rolling){
+      // ★ ch.id 는 Chart.js v4 내부 sequential 숫자 ID — 캔버스 ID 가 아님
+      // CHART_REG forEach 의 두 번째 인자(_id) 가 캔버스 ID
+      const win = getWeekWindow(_id, labels.length, meta.rolling);
+      labels = labels.slice(win.start, win.end);
+      datasetsData = datasetsData.map(arr=>arr.slice(win.start, win.end));
+    }
+    // 4) ch.data 통째 교체 (Chart.js v4 reflow 강제)
+    const dimFilterVal = (meta.dim==='month'?af.fMonth:meta.dim==='week'?af.fWeek||af.fMonth:meta.dim==='center'?af.fCenter:meta.dim==='category'?af.fCategory:meta.dim==='channel'?af.fChannel:null);
+    const hasHighlight = meta.dim && (af.fMonth||af.fWeek||af.fCenter||af.fCategory||af.fChannel) && (
+      meta.dim==='month'?af.fMonth:meta.dim==='week'?(af.fWeek||af.fMonth):meta.dim==='center'?af.fCenter:meta.dim==='category'?af.fCategory:meta.dim==='channel'?af.fChannel:false);
+    const matchedArr = hasHighlight ? labels.map(lab => labelMatches(lab, dimFilterVal, meta.dim)) : null;
+    // 새 datasets 배열 — 기존 dataset 속성 모두 보존하면서 data/색상만 갱신
+    const newDatasets = ch.data.datasets.map((ds, i) => {
+      const o = b.datasets[i];
+      if(!o) return ds;
+      const newDs = Object.assign({}, ds);  // 얕은 복사
+      newDs.data = datasetsData[i].map(v=>{
+        if(v===null||v===undefined) return v;
+        if(typeof v==='object'&&v!==null&&'x' in v) return {x:v.x*f, y:v.y*f};
+        if(typeof v==='number') return Math.round(v*f*100)/100;
+        return v;
+      });
+      if(hasHighlight && o.backgroundColor){
+        const baseBg = Array.isArray(o.backgroundColor) ? o.backgroundColor.slice() : o.backgroundColor;
+        if(Array.isArray(baseBg)){
+          newDs.backgroundColor = matchedArr.map((m,li)=> m ? baseBg[li] : dimColor(baseBg[li]));
+        } else {
+          newDs.backgroundColor = matchedArr.map(m => m ? baseBg : dimColor(baseBg));
+        }
+        newDs.borderColor = matchedArr.map(m => m ? 'rgba(209,153,0,1)' : 'transparent');
+        newDs.borderWidth = matchedArr.map(m => m ? 3 : 0);
+      } else if(o.backgroundColor !== undefined) {
+        newDs.backgroundColor = o.backgroundColor;
+        if(o.borderColor !== undefined) newDs.borderColor = o.borderColor; else delete newDs.borderColor;
+        if(o.borderWidth !== undefined) newDs.borderWidth = o.borderWidth; else delete newDs.borderWidth;
+      }
+      return newDs;
+    });
+    // ★ ch.data 자체를 새 객체로 통째 교체 — Chart.js v4 가 reference 변경 감지하도록
+    ch.data = {labels: labels, datasets: newDatasets};
+    ch.update();
+  });
+  // KPI 카드: 모든 필터 곱셈 (단순)
+  let kf = 1;
+  for(const [k,tab] of Object.entries(FW)){
+    const v=fv(k); if(!v||v.startsWith('전체')) continue;
+    kf *= (tab[v]??1);
+  }
+  KPI_BACKUP.forEach((orig,el)=>{
+    const m=orig.match(/^([\d,]+(?:\.\d+)?)(.*)/);
+    if(!m){el.textContent=orig;return;}
+    const num=parseFloat(m[1].replace(/,/g,''));
+    if(isNaN(num)){el.textContent=orig;return;}
+    el.textContent=fmtNum(num*kf,orig);
+  });
+  // 칩 갱신 (기존 로직)
+  const chip=document.getElementById('filterChip');
+  const parts=[];
+  ['fYear','fMonth','fWeek','fCenter','fCategory','fChannel'].forEach(id=>{
+    const v=fv(id);
+    if(v&&!v.startsWith('전체')&&!/^\d+년$/.test(v))parts.push(v);
+    else if(/^\d+년$/.test(v))parts.unshift(v);
+  });
+  if(parts.length>0){chip.textContent='🔍 '+parts.join(' / ');chip.style.display='';}
+  else chip.style.display='none';
+  // weekly 차트들 multi-line 라벨 layout 강제 재계산 (ch.update() 만으론 axis layout 재계산 안 함)
+  ['ch-daily-combo','ch-daily-var','ch-weekly-channel','ch-weekly-inbound'].forEach(id=>{
+    const ch = CHART_REG.get(id);
+    if(ch && typeof ch.resize === 'function') ch.resize();
+  });
+  // 일별 상세 표의 공휴일/주말 동적 강조
+  if(typeof updateWeeklyTableHolidays === 'function') updateWeeklyTableHolidays();
+}
+function fmtNum(scaled,orig){
+if(/%$/.test(orig))return scaled.toFixed(1)+'%';
+if(/일$/.test(orig))return scaled.toFixed(1)+'일';
+if(/h$/.test(orig))return scaled.toFixed(1)+'h';
+if(/K$/.test(orig))return Math.round(scaled).toLocaleString()+'K';
+if(/억$/.test(orig))return scaled.toFixed(1)+'억';
+if(scaled>=1000)return Math.round(scaled).toLocaleString();
+if(scaled<10)return scaled.toFixed(1);
+return Math.round(scaled).toString();
+}
+function resetFilter(){
+  ['fYear','fMonth','fWeek','fCenter','fCategory','fChannel'].forEach(id=>{document.getElementById(id).selectedIndex=0;});
+  CHART_REG.forEach((ch,_id)=>{
+    const b=CHART_BACKUP.get(_id);if(!b)return;
+    ch.data.labels = b.labels.slice();
+    ch.data.datasets.forEach((ds,i)=>{
+      const o=b.datasets[i];if(!o)return;
+      ds.data=o.data.slice();
+      if(o.backgroundColor !== undefined) ds.backgroundColor = Array.isArray(o.backgroundColor) ? o.backgroundColor.slice() : o.backgroundColor;
+      // 강조 적용했던 borderColor/borderWidth 원복
+      if(o.borderColor !== undefined) ds.borderColor = Array.isArray(o.borderColor) ? o.borderColor.slice() : o.borderColor;
+      else { delete ds.borderColor; }
+      if(o.borderWidth !== undefined) ds.borderWidth = Array.isArray(o.borderWidth) ? o.borderWidth.slice() : o.borderWidth;
+      else { delete ds.borderWidth; }
+    });
+    ch.update();
+  });
+  KPI_BACKUP.forEach((orig,el)=>{el.textContent=orig;});
+  document.getElementById('filterChip').style.display='none';
+}
+// fMonth/fYear 변경 시 fWeek select 옵션 갱신 (그 월의 월요일 개수 = 주차 수)
+function updateWeekOptions(){
+  const fMonth = document.getElementById('fMonth');
+  const fWeek  = document.getElementById('fWeek');
+  if(!fMonth || !fWeek) return;
+  const yi = parseInt(fv('fYear')) || 2025;
+  const mStr = fv('fMonth');
+  const monthMap = {'1월':1,'2월':2,'3월':3,'4월':4,'5월':5,'6월':6,'7월':7,'8월':8,'9월':9,'10월':10,'11월':11,'12월':12};
+  const mi = monthMap[mStr] || null;
+  const prevVal = fWeek.value;
+  let opts = '<option value="">전체 주차</option>';
+  let maxW = 5;
+  if(mi){
+    // 그 월의 월요일 개수 = 주차 수
+    let cnt = 0;
+    for(let d=1; d<=31; d++){
+      const dt = new Date(yi, mi-1, d);
+      if(dt.getMonth() !== mi-1) break;
+      if(dt.getDay() === 1) cnt++;  // 1=월요일
+    }
+    maxW = cnt;
+  }
+  for(let w=1; w<=maxW; w++) opts += '<option value="' + w + '주차">' + w + '주차</option>';
+  fWeek.innerHTML = opts;
+  // 기존 값 복원 시도
+  const tryVal = [...fWeek.options].find(o=>o.value===prevVal);
+  if(tryVal) fWeek.value = prevVal; else fWeek.selectedIndex = 0;
+}
+const _fM = document.getElementById('fMonth');
+const _fY = document.getElementById('fYear');
+if(_fM) _fM.addEventListener('change', updateWeekOptions);
+if(_fY) _fY.addEventListener('change', updateWeekOptions);
+window.addEventListener('load', () => setTimeout(updateWeekOptions, 30));
+
+document.getElementById('fApply').addEventListener('click',applyFilter);
+document.getElementById('fReset').addEventListener('click',resetFilter);
+// 차트별 기간 선택 select change → 즉시 적용
+document.querySelectorAll('select.ch-range').forEach(sel=>sel.addEventListener('change',applyFilter));
+// 페이지 로드 직후 디폴트 윈도우 적용 (마지막 12주/8주만 보이도록)
+window.addEventListener('load',()=>{ setTimeout(()=>{ applyFilter(); updateWeeklyTableHolidays(); }, 50); });
+
+// 탭 전환
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+btn.classList.add('active');
+document.getElementById(btn.dataset.tab).classList.add('active');
+}));
+
+// 테마 토글 — 사용자 요청으로 제거 (2026-05-10), 추후 필요 시 재추가
+
+// 캡처
+document.getElementById('captureBtn').addEventListener('click',async()=>{
+const btn=document.getElementById('captureBtn'),o=btn.textContent;btn.textContent='캡처중...';btn.disabled=true;
+try{const tab=document.querySelector('.tab.active')?.dataset.tab||'dashboard';
+const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+const cv=await html2canvas(document.querySelector('.shell'),{backgroundColor:bg,scale:2,logging:false});
+cv.toBlob(b=>{const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='dashboard-'+tab+'-'+ts+'.png';a.click();URL.revokeObjectURL(u);});
+}catch(e){console.error(e);alert('캡처 실패: '+e.message);}
+finally{btn.textContent=o;btn.disabled=false;}
+});
+</script>
+<script>
+/* === B9 모니터링 탭 + B5 박스플롯 (Phase 2) === */
+(async function initMonitor(){
+  let data;
+  try {
+    data = await (await fetch('data/dashboard.json',{cache:'no-store'})).json();
+  } catch(e){
+    console.warn('[monitor] dashboard.json fetch failed', e);
+    return;
+  }
+  const fm = data.forecast_meta || null;
+  const bt = data.backtest || null;
+  const gm = data.group_mape || null;
+
+  const $ = id => document.getElementById(id);
+  const fmt = (v, suf='') => (v==null||isNaN(v)) ? '-' : (typeof v==='number' ? v.toFixed(2)+suf : String(v));
+
+  /* 상단 4개 KPI */
+  // 헤더 modelChip 동적 갱신 (Bug #10)
+  if(data.model_version){
+    const mc=document.getElementById('modelChip');
+    if(mc) mc.textContent = '예측: ' + data.model_version;
+  }
+  if(fm){
+    $('monModelVer').textContent = fm.model_version;
+    $('monTrainAt').textContent  = (fm.train_at||'').slice(5,16);
+    $('monModelDef').textContent = `cutoff: ${fm.train_cutoff}, n_features: ${fm.n_features}`;
+  }
+  if(bt){
+    const s = bt.summary;
+    $('monMapeMean').textContent = fmt(s.mape_mean,'%');
+    $('monMapeP90').textContent  = fmt(s.mape_p90,'%');
+    $('monMapeRange').textContent= `P50: ${fmt(s.mape_p50,'%')} / MAX: ${fmt(s.mape_max,'%')}`;
+    const mb = $('monMapeBadge'); mb.textContent = s.mape_p90 > 30 ? '주의' : '양호';
+    mb.className = 'badge ' + (s.mape_p90 > 30 ? 'warn' : 'ok');
+    $('monBiasStreak').textContent = (s.bias_streak>0?'+':'') + s.bias_streak + '주';
+    $('monBiasMean').textContent   = fmt(s.bias_mean,'%');
+    const bb = $('monBiasBadge');
+    bb.textContent = Math.abs(s.bias_streak) >= 4 ? '편향 의심' : '정상';
+    bb.className = 'badge ' + (Math.abs(s.bias_streak) >= 4 ? 'warn' : 'ok');
+  }
+  if(gm){
+    const s = gm.summary;
+    $('monGroupOver30').textContent = s.over_30;
+    $('monGroupTotal').textContent  = s.groups;
+    $('monGroupMax').textContent    = `MAX MAPE: ${fmt(s.mape_max,'%')}`;
+    const gb = $('monGroupBadge');
+    gb.textContent = s.over_30 > 0 ? `${s.over_30}건` : '0건';
+    gb.className   = 'badge ' + (s.over_30 > 0 ? 'err' : 'ok');
+  }
+
+  const monCommon = {responsive:true, maintainAspectRatio:false,
+    layout:{padding:{top:10,right:24,bottom:6,left:24}},
+    plugins:{legend:{labels:{color:C('--text')}}, datalabels:{display:false}},
+    scales:{x:{offset:true, ticks:{color:C('--text')}, grid:{color:'rgba(122,121,116,.18)'}},
+            y:{ticks:{color:C('--text')}, grid:{color:'rgba(122,121,116,.18)'}}}};
+
+  /* MAPE 추이 라인 */
+  if(bt && bt.weekly && bt.weekly.length){
+    const w = [...bt.weekly].sort((a,b)=>a.week_start.localeCompare(b.week_start));
+    _trackChart($('ch-mon-mape'),{type:'line', data:{
+      labels: w.map(r=>r.week_start.slice(5)),
+      datasets:[
+        {label:'MAPE %', data:w.map(r=>r.mape), borderColor:'rgba(1,105,111,1)', backgroundColor:'rgba(1,105,111,.18)', tension:.25, fill:true, pointRadius:4},
+        {label:'평균', data:w.map(()=>bt.summary.mape_mean), borderColor:'rgba(186,185,180,.7)', borderDash:[4,4], pointRadius:0},
+        {label:'임계 30%', data:w.map(()=>30), borderColor:'rgba(161,53,68,.6)', borderDash:[2,4], pointRadius:0},
+      ]
+    }, options: monCommon});
+  }
+
+  /* Bias 추이 막대 (양/음 색상 분리) */
+  if(bt && bt.weekly && bt.weekly.length){
+    const w = [...bt.weekly].sort((a,b)=>a.week_start.localeCompare(b.week_start));
+    _trackChart($('ch-mon-bias'),{type:'bar', data:{
+      labels: w.map(r=>r.week_start.slice(5)),
+      datasets:[{label:'Bias %', data:w.map(r=>r.bias),
+        backgroundColor:w.map(r=>r.bias>=0?'rgba(209,153,0,.78)':'rgba(1,105,111,.78)')}]
+    }, options: monCommon});
+  }
+
+  /* 그룹별 MAPE 박스플롯 — 3축 (center/category/channel) */
+  if(gm && gm.groups && gm.groups.length && window.Chart && Chart.controllers && Chart.controllers.boxplot){
+    const groupBy = (key) => {
+      const m = {};
+      for(const g of gm.groups){ (m[g[key]] = m[g[key]] || []).push(g.mape); }
+      return m;
+    };
+    const datasets = [];
+    const axes = [
+      {key:'center_id',   label:'센터',     color:'rgba(1,105,111,.55)'},
+      {key:'category_id', label:'카테고리', color:'rgba(209,153,0,.55)'},
+      {key:'channel',     label:'채널',     color:'rgba(67,122,34,.55)'},
+    ];
+    let labels = [];
+    for(const ax of axes){
+      const m = groupBy(ax.key);
+      const keys = Object.keys(m).sort();
+      datasets.push({label: ax.label, backgroundColor: ax.color, borderColor: ax.color.replace('.55','1'),
+                     data: keys.map(k=>m[k])});
+      if(labels.length < keys.length) labels = keys;
+    }
+    /* 박스플롯은 라벨이 데이터셋별로 다르면 Chart.js 가 표시 못하므로 별도 3개 차트로 분리 */
+    const ctx = $('ch-mon-boxplot');
+    if(ctx){
+      const wrap = ctx.parentElement;
+      wrap.innerHTML = '';
+      for(const ax of axes){
+        const m = groupBy(ax.key); const keys = Object.keys(m).sort();
+        const sub = document.createElement('canvas');
+        // ★ 명시적 ID 부여 — 없으면 _trackChart 가 CHART_REG 에 등록 못 함 (size 카운트 누락)
+        sub.id = 'ch-mon-box-' + ax.key.replace('_id','');  // center_id→center / category_id→category / channel→channel
+        sub.style.minHeight='210px'; sub.style.maxHeight='240px'; sub.style.marginBottom='10px';  // height 강제 제거 — Chart.js responsive resize loop 회피 (이전 폭주 원인)
+        wrap.appendChild(sub);
+        _trackChart(sub,{type:'boxplot', data:{labels:keys, datasets:[{label:ax.label,
+          backgroundColor:ax.color, borderColor:ax.color.replace('.55','1'),
+          data: keys.map(k=>m[k])}]},
+          options:{...monCommon, plugins:{...monCommon.plugins, title:{display:true,text:`by ${ax.label}`,color:C('--text')}}}});
+      }
+    }
+  } else if(gm && gm.groups && gm.groups.length){
+    /* 폴백: 그룹별 평균/최대 MAPE — 가로 막대, prefix 한글, 단위 자동 감지 */
+    const center={}, category={}, channel={};
+    for(const g of gm.groups){
+      (center[g.center_id]=center[g.center_id]||[]).push(g.mape);
+      (category[g.category_id]=category[g.category_id]||[]).push(g.mape);
+      (channel[g.channel]=channel[g.channel]||[]).push(g.mape);
+    }
+    const sources = [['센', center], ['카', category], ['채', channel]];
+    const labels=[], means=[], maxes=[];
+    for(const [pre, m] of sources){
+      for(const k of Object.keys(m).sort()){
+        const vs = m[k]; if(!vs.length) continue;
+        labels.push(pre + ':' + k);
+        means.push(vs.reduce((a,b)=>a+b,0)/vs.length);
+        maxes.push(Math.max(...vs));
+      }
+    }
+    /* 데이터 단위 자동 감지: max < 1 이면 소수형 (0.05=5%) → ×100, 아니면 그대로 */
+    const rawMax = Math.max(...maxes, 0);
+    const factor = rawMax > 0 && rawMax < 1 ? 100 : 1;
+    if(factor === 100){
+      for(let i=0;i<means.length;i++){ means[i] = means[i]*100; maxes[i] = maxes[i]*100; }
+    }
+    /* 소수점 1자리 round */
+    for(let i=0;i<means.length;i++){ means[i] = Math.round(means[i]*10)/10; maxes[i] = Math.round(maxes[i]*10)/10; }
+    console.log('[B5 fallback]', {labels:labels.length, factor, means_max:Math.max(...means), maxes_max:Math.max(...maxes)});
+    _trackChart($('ch-mon-boxplot'),{
+      type:'bar',
+      data:{labels, datasets:[
+        {label:'평균 MAPE %', data:means, backgroundColor:'rgba(1,105,111,.78)'},
+        {label:'최대 MAPE %', data:maxes, backgroundColor:'rgba(161,53,68,.6)'},
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        layout:{padding:{top:10,right:24,bottom:10,left:8}},
+        plugins:{legend:{position:'top', labels:{color:C('--text')}}, datalabels:{display:false}},
+        scales:{
+          x:{beginAtZero:true, title:{display:true,text:'MAPE %',color:C('--muted')}, ticks:{color:C('--muted')}, grid:{color:'rgba(122,121,116,.14)'}},
+          y:{ticks:{color:C('--text'), font:{size:11}}, grid:{display:false}}
+        }
+      }
+    });
+  }
+
+  /* 재학습 로그 테이블 */
+  if(bt && bt.weekly && bt.weekly.length){
+    const tbody = document.querySelector('#tbl-mon-log tbody');
+    if(tbody){
+      tbody.innerHTML = '';
+      bt.weekly.forEach(w=>{
+        const tr = document.createElement('tr');
+        const mp = (typeof w.mape==='number') ? w.mape.toFixed(2) : (w.mape ?? '-');
+        const bs = (typeof w.bias==='number') ? w.bias.toFixed(2) : (w.bias ?? '-');
+        const cv = (typeof w.coverage_80==='number') ? (w.coverage_80*100).toFixed(0) : (w.coverage_80 ?? '-');
+        tr.innerHTML = `<td>${w.fold ?? '-'}</td><td>${w.train_cutoff ?? '-'}</td><td>${(w.week_start ?? '')+ '~' + (w.week_end ?? '')}</td><td>${mp}%</td><td>${bs}%</td><td>${cv}%</td><td>${w.n_train_rows ?? '-'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>

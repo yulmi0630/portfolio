@@ -1,0 +1,515 @@
+{
+  "updated_at": "2026-05-10 06:37:55",
+  "mode": "live",
+  "environment": "sample",
+  "data_cutoff": "2025-12-31",
+  "rows": 35088,
+  "centers": [
+    "C001",
+    "C002",
+    "C003",
+    "C004"
+  ],
+  "categories": [
+    "BEAUTY",
+    "FASHION",
+    "FOOD",
+    "LIVING"
+  ],
+  "channels": [
+    "b2b",
+    "offline",
+    "online"
+  ],
+  "config_version": "v4.0",
+  "model_version": "lgbm-quantile-v0.2",
+  "forecast_meta": {
+    "model_version": "lgbm-quantile-v0.2",
+    "train_cutoff": "2025-12-03",
+    "train_at": "2026-05-09 18:00:42",
+    "n_features": 51
+  },
+  "backtest": {
+    "summary": {
+      "folds": 4,
+      "mape_mean": 3.38,
+      "mape_p50": 3.38,
+      "mape_p90": 3.69,
+      "mape_max": 3.78,
+      "bias_mean": -0.08,
+      "bias_streak": -2,
+      "coverage_80_mean": 83.4,
+      "model_version": "lgbm-quantile-v0.2",
+      "train_at": "2026-05-09 18:02:01",
+      "n_features": 51
+    },
+    "weekly": [
+      {
+        "fold": 3,
+        "week_start": "2025-12-04",
+        "week_end": "2025-12-10",
+        "train_cutoff": "2025-12-03",
+        "mape": 3.27,
+        "bias": 0.43,
+        "coverage_80": 83.0,
+        "n_train_rows": 29712,
+        "n_test_rows": 336
+      },
+      {
+        "fold": 2,
+        "week_start": "2025-12-11",
+        "week_end": "2025-12-17",
+        "train_cutoff": "2025-12-10",
+        "mape": 2.96,
+        "bias": 0.52,
+        "coverage_80": 84.8,
+        "n_train_rows": 30048,
+        "n_test_rows": 336
+      },
+      {
+        "fold": 1,
+        "week_start": "2025-12-18",
+        "week_end": "2025-12-24",
+        "train_cutoff": "2025-12-17",
+        "mape": 3.49,
+        "bias": -0.62,
+        "coverage_80": 83.9,
+        "n_train_rows": 30384,
+        "n_test_rows": 336
+      },
+      {
+        "fold": 0,
+        "week_start": "2025-12-25",
+        "week_end": "2025-12-31",
+        "train_cutoff": "2025-12-24",
+        "mape": 3.78,
+        "bias": -0.65,
+        "coverage_80": 81.8,
+        "n_train_rows": 30720,
+        "n_test_rows": 336
+      }
+    ]
+  },
+  "group_mape": {
+    "summary": {
+      "groups": 48,
+      "mape_mean": 3.47,
+      "mape_p50": 3.39,
+      "mape_p90": 4.48,
+      "mape_max": 6.05,
+      "over_30": 0,
+      "over_50": 0
+    },
+    "groups": [
+      {
+        "center_id": "C004",
+        "category_id": "BEAUTY",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 6.05,
+        "bias": -0.16
+      },
+      {
+        "center_id": "C003",
+        "category_id": "FASHION",
+        "channel": "offline",
+        "n": 28,
+        "mape": 4.74,
+        "bias": -0.88
+      },
+      {
+        "center_id": "C002",
+        "category_id": "BEAUTY",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 4.6,
+        "bias": -0.2
+      },
+      {
+        "center_id": "C003",
+        "category_id": "BEAUTY",
+        "channel": "online",
+        "n": 28,
+        "mape": 4.58,
+        "bias": 0.19
+      },
+      {
+        "center_id": "C001",
+        "category_id": "FASHION",
+        "channel": "offline",
+        "n": 28,
+        "mape": 4.5,
+        "bias": -1.46
+      },
+      {
+        "center_id": "C004",
+        "category_id": "FASHION",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 4.47,
+        "bias": 0.04
+      },
+      {
+        "center_id": "C003",
+        "category_id": "FOOD",
+        "channel": "online",
+        "n": 28,
+        "mape": 4.35,
+        "bias": 0.61
+      },
+      {
+        "center_id": "C004",
+        "category_id": "FOOD",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 4.3,
+        "bias": 0.37
+      },
+      {
+        "center_id": "C001",
+        "category_id": "LIVING",
+        "channel": "online",
+        "n": 28,
+        "mape": 4.18,
+        "bias": 4.97
+      },
+      {
+        "center_id": "C002",
+        "category_id": "FOOD",
+        "channel": "offline",
+        "n": 28,
+        "mape": 4.18,
+        "bias": -0.61
+      },
+      {
+        "center_id": "C002",
+        "category_id": "LIVING",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 4.17,
+        "bias": -0.05
+      },
+      {
+        "center_id": "C003",
+        "category_id": "LIVING",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.99,
+        "bias": 3.17
+      },
+      {
+        "center_id": "C003",
+        "category_id": "LIVING",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.96,
+        "bias": 0.38
+      },
+      {
+        "center_id": "C001",
+        "category_id": "BEAUTY",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.7,
+        "bias": 0.61
+      },
+      {
+        "center_id": "C003",
+        "category_id": "LIVING",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.68,
+        "bias": -0.64
+      },
+      {
+        "center_id": "C001",
+        "category_id": "FOOD",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.68,
+        "bias": 0.39
+      },
+      {
+        "center_id": "C003",
+        "category_id": "FOOD",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.67,
+        "bias": -0.11
+      },
+      {
+        "center_id": "C004",
+        "category_id": "LIVING",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.6,
+        "bias": -0.72
+      },
+      {
+        "center_id": "C002",
+        "category_id": "BEAUTY",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.59,
+        "bias": -0.27
+      },
+      {
+        "center_id": "C002",
+        "category_id": "LIVING",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.54,
+        "bias": -0.11
+      },
+      {
+        "center_id": "C001",
+        "category_id": "BEAUTY",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.5,
+        "bias": -0.35
+      },
+      {
+        "center_id": "C003",
+        "category_id": "FASHION",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.49,
+        "bias": -0.83
+      },
+      {
+        "center_id": "C002",
+        "category_id": "FASHION",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.42,
+        "bias": -1.01
+      },
+      {
+        "center_id": "C001",
+        "category_id": "LIVING",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.41,
+        "bias": 0.95
+      },
+      {
+        "center_id": "C002",
+        "category_id": "FOOD",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.36,
+        "bias": 0.06
+      },
+      {
+        "center_id": "C001",
+        "category_id": "LIVING",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.36,
+        "bias": 0.16
+      },
+      {
+        "center_id": "C003",
+        "category_id": "BEAUTY",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.28,
+        "bias": -0.07
+      },
+      {
+        "center_id": "C004",
+        "category_id": "FOOD",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.24,
+        "bias": 0.03
+      },
+      {
+        "center_id": "C001",
+        "category_id": "FOOD",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.22,
+        "bias": 0.16
+      },
+      {
+        "center_id": "C001",
+        "category_id": "BEAUTY",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.21,
+        "bias": -0.05
+      },
+      {
+        "center_id": "C004",
+        "category_id": "BEAUTY",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.19,
+        "bias": 0.02
+      },
+      {
+        "center_id": "C003",
+        "category_id": "FOOD",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 3.12,
+        "bias": -0.46
+      },
+      {
+        "center_id": "C002",
+        "category_id": "BEAUTY",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.12,
+        "bias": -0.94
+      },
+      {
+        "center_id": "C002",
+        "category_id": "FOOD",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.07,
+        "bias": 2.34
+      },
+      {
+        "center_id": "C004",
+        "category_id": "FASHION",
+        "channel": "offline",
+        "n": 28,
+        "mape": 3.06,
+        "bias": -0.26
+      },
+      {
+        "center_id": "C004",
+        "category_id": "LIVING",
+        "channel": "online",
+        "n": 28,
+        "mape": 3.03,
+        "bias": 2.16
+      },
+      {
+        "center_id": "C001",
+        "category_id": "FOOD",
+        "channel": "online",
+        "n": 28,
+        "mape": 2.95,
+        "bias": 1.72
+      },
+      {
+        "center_id": "C003",
+        "category_id": "BEAUTY",
+        "channel": "offline",
+        "n": 28,
+        "mape": 2.9,
+        "bias": -0.14
+      },
+      {
+        "center_id": "C001",
+        "category_id": "FASHION",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 2.87,
+        "bias": -0.42
+      },
+      {
+        "center_id": "C004",
+        "category_id": "FOOD",
+        "channel": "offline",
+        "n": 28,
+        "mape": 2.83,
+        "bias": -0.15
+      },
+      {
+        "center_id": "C002",
+        "category_id": "FASHION",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 2.82,
+        "bias": 0.19
+      },
+      {
+        "center_id": "C004",
+        "category_id": "LIVING",
+        "channel": "b2b",
+        "n": 28,
+        "mape": 2.78,
+        "bias": -0.04
+      },
+      {
+        "center_id": "C004",
+        "category_id": "BEAUTY",
+        "channel": "offline",
+        "n": 28,
+        "mape": 2.54,
+        "bias": -0.17
+      },
+      {
+        "center_id": "C004",
+        "category_id": "FASHION",
+        "channel": "online",
+        "n": 28,
+        "mape": 2.36,
+        "bias": -0.16
+      },
+      {
+        "center_id": "C002",
+        "category_id": "LIVING",
+        "channel": "online",
+        "n": 28,
+        "mape": 2.29,
+        "bias": -0.44
+      },
+      {
+        "center_id": "C003",
+        "category_id": "FASHION",
+        "channel": "online",
+        "n": 28,
+        "mape": 2.19,
+        "bias": -1.31
+      },
+      {
+        "center_id": "C001",
+        "category_id": "FASHION",
+        "channel": "online",
+        "n": 28,
+        "mape": 2.14,
+        "bias": 5.13
+      },
+      {
+        "center_id": "C002",
+        "category_id": "FASHION",
+        "channel": "online",
+        "n": 28,
+        "mape": 2.13,
+        "bias": -0.84
+      }
+    ]
+  },
+  "alerts": 0,
+  "alert_list": [],
+  "quality_issues": [
+    {
+      "type": "null",
+      "msg": "holiday_type null rate 95.5pct"
+    }
+  ],
+  "kpis": {
+    "inbound_planned": 54408,
+    "inbound_actual": 49684,
+    "inbound_delta": -10.9,
+    "inbound_achievement": 91.32,
+    "outbound_actual": 57961,
+    "outbound_delta": -9.05,
+    "return_qty": 1274,
+    "return_rate": 2.23,
+    "return_rate_def": "7d window / 14d lag",
+    "stock_total": 5403,
+    "doi": 0.6,
+    "risk_groups": 48,
+    "overstock_groups": 0,
+    "dead_groups": 0,
+    "revenue_yr": 543.3
+  }
+}

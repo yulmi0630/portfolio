@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCM 데이터 파이프라인·KPI 대시보드 포트폴리오</title>
+<meta name="description" content="AI 데이터 파이프라인으로 만든 SCM 운영기획 대시보드 2종">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="SCM 데이터 파이프라인·KPI 대시보드 포트폴리오">
+<meta property="og:description" content="AI 데이터 파이프라인으로 만든 SCM 운영기획 대시보드 2종">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root {
+  --bg: #f7f6f2;
+  --surface: #f9f8f5;
+  --surface2: #fbfbf9;
+  --off: #edeae5;
+  --border: #d4d1ca;
+  --text: #28251d;
+  --muted: #7a7974;
+  --faint: #bab9b4;
+  --primary: #01696f;
+  --primary-soft: rgba(1, 105, 111, 0.08);
+  --primary-2: #2a7f83;
+  --success: #437a22;
+  --warning: #d19900;
+  --radius: 1rem;
+  --radius-lg: 1.25rem;
+  --shadow: 0 1px 2px rgba(32, 28, 20, 0.06);
+  --shadow-md: 0 10px 28px rgba(32, 28, 20, 0.09);
+  --font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Hero */
+.hero {
+  padding: 5rem 0 3.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.eyebrow {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+.hero h1 {
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  font-weight: 700;
+}
+.hero .lead {
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin: 0 0 2rem;
+  max-width: 620px;
+}
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-bottom: 2.25rem;
+}
+.meta-row span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.3rem;
+  border-radius: 999px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.btn:hover { transform: translateY(-1px); text-decoration: none; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-2); }
+.btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Section */
+section { padding: 4rem 0; border-bottom: 1px solid var(--border); }
+section:last-of-type { border-bottom: none; }
+.section-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin: 0 0 0.6rem;
+}
+h2 {
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  letter-spacing: -0.025em;
+  margin: 0 0 1rem;
+  font-weight: 700;
+}
+.section-lead { color: var(--muted); font-size: 1.05rem; margin: 0 0 2rem; max-width: 680px; }
+p { margin: 0 0 1rem; }
+
+/* Problem */
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+.problem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+.problem-card .num {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+.problem-card h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.problem-card p { color: var(--muted); font-size: 0.95rem; margin: 0; }
+
+/* Dashboard cards */
+.dash-list { display: grid; gap: 1.5rem; }
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 2rem;
+  align-items: center;
+}
+.dash-card .body h3 {
+  font-size: 1.45rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+.dash-card .tagline {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.02em;
+}
+.dash-card p { color: var(--muted); font-size: 1rem; margin: 0 0 1.25rem; }
+.dash-card .feats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1.5rem;
+}
+.feat-chip {
+  background: var(--off);
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.dash-card .preview {
+  background: linear-gradient(135deg, var(--primary-soft), rgba(1, 105, 111, 0.02));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.preview-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.03em;
+}
+.preview-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Architecture */
+.arch-toggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 1rem;
+}
+.arch-toggle summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  user-select: none;
+}
+.arch-toggle summary::-webkit-details-marker { display: none; }
+.arch-toggle summary::after {
+  content: '＋';
+  color: var(--primary);
+  font-size: 1.3rem;
+  font-weight: 400;
+  transition: transform 0.2s ease;
+}
+.arch-toggle[open] summary::after { content: '−'; }
+.arch-toggle summary:hover { background: var(--off); }
+.arch-body { padding: 0 1.5rem 1.75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+.stages {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.stage {
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  font-size: 0.85rem;
+}
+.stage-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.stage-name { font-weight: 600; color: var(--text); }
+.stage-desc { color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; }
+
+/* Stack chips */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.stack-col h4 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+.stack-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.stack-chips span {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.88rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+/* About */
+.about-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+}
+.about-row .summary { font-size: 1rem; color: var(--text); margin: 0; }
+.about-row .summary strong { color: var(--primary); }
+
+/* Footer */
+footer {
+  padding: 2.5rem 0 3.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+footer .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+footer .copy { color: var(--muted); font-size: 0.9rem; margin: 0; }
+footer .contact { color: var(--muted); font-size: 0.9rem; }
+footer .contact a { color: var(--text); margin-left: 1rem; }
+
+@media (max-width: 720px) {
+  .hero { padding: 3rem 0 2.5rem; }
+  section { padding: 3rem 0; }
+  .problem-grid, .stages { grid-template-columns: 1fr 1fr; }
+  .stack-grid { grid-template-columns: 1fr; }
+  .dash-card { grid-template-columns: 1fr; padding: 1.5rem; }
+  .dash-card .preview { aspect-ratio: 16 / 9; }
+  .about-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">SCM 운영기획 · 사이드 프로젝트 포트폴리오</p>
+    <h1>풀필먼트 운영의 의사결정을<br>데이터·AI로 자동화합니다.</h1>
+    <p class="lead">
+      본 사이트는 <strong>직접 구축한 AI 데이터 파이프라인과 KPI 대시보드 결과물 2종</strong>을 모은 곳입니다. SCM 운영기획 영역에서 매주 반복되는 분석·진단·액션 도출 과정을 표준 흐름으로 자동화할 수 있는지 검증하기 위해 만들었습니다.
+    </p>
+    <div class="cta-row">
+      <a href="#dashboards" class="btn btn-primary">대시보드 데모 보기 ↓</a>
+      <a href="#problem" class="btn btn-ghost">제작 배경</a>
+    </div>
+  </div>
+</header>
+
+<section id="problem">
+  <div class="wrap">
+    <p class="section-eyebrow">Why</p>
+    <h2>왜 만들었나</h2>
+    <p class="section-lead">
+      현장에서 매주 반복해온 SCM 운영 데이터 검토를 <strong>"진단 → 문제 정의 → KPI → 액션 → 검증"의 표준 흐름</strong>으로 자동화하면, 1인 PM 체계에서도 의사결정 속도와 일관성을 높일 수 있다는 가설에서 출발했습니다.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="num">01</div>
+        <h3>현장 페인포인트</h3>
+        <p>매월 반복되는 KPI 검토·이슈 진단·액션 도출에 평균 8~12시간 소요. 분석자별 기준 편차로 의사결정 일관성 저하.</p>
+      </div>
+      <div class="problem-card">
+        <div class="num">02</div>
+        <h3>구조 가설</h3>
+        <p>운영 데이터 → 진단 → 문제 정의 → KPI → 액션 인덱스 → 검증을 8단계로 표준화하면 LLM이 단계별 산출물을 안정적으로 만들 수 있다.</p>
+      </div>
+      <div class="problem-card">
+        <div class="num">03</div>
+        <h3>검증 결과</h3>
+        <p>샘플 SCM 데이터 기준 8단계 파이프라인 + 의사결정 대시보드 자동 생성. 운영자가 클릭 한 번으로 트렌드·경보·액션 확인 가능.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="dashboards">
+  <div class="wrap">
+    <p class="section-eyebrow">Live Demo</p>
+    <h2>대시보드 2종</h2>
+    <p class="section-lead">두 대시보드 모두 <strong>본인이 만든 샘플·모의 데이터</strong>로 구동되며, 라이브 환경에서 직접 클릭해보실 수 있습니다.</p>
+
+    <div class="dash-list">
+
+      <article class="dash-card">
+        <div class="body">
+          <h3>AI 데이터 파이프라인 대시보드</h3>
+          <div class="tagline">scm-data-v1 · 8단계 자동 분석 → 의사결정 가이드</div>
+          <p>샘플 SCM 데이터를 입력하면 프로파일링 → EDA → 진단 → 문제 정의 → KPI → 임팩트 → 액션 → 대시보드까지 8단계를 LLM이 순차 생성합니다. 대시보드는 KPI 트렌드, 게이트 경보, 액션 인덱스, 검증 결과를 단일 페이지로 보여줍니다.</p>
+          <div class="feats">
+            <span class="feat-chip">KPI 트렌드 분석</span>
+            <span class="feat-chip">게이트 경보</span>
+            <span class="feat-chip">액션 인덱스</span>
+            <span class="feat-chip">검증 결과 추적</span>
+          </div>
+          <a href="dashboards/pipeline/" class="btn btn-primary" target="_blank" rel="noopener">라이브 데모 열기 ↗</a>
+        </div>
+        <div class="preview">
+          <div class="preview-icon">8 단계</div>
+          <div class="preview-label">profile → eda → diagnosis → problem → kpi → impact → action → dashboard</div>
+        </div>
+      </article>
+
+      <article class="dash-card">
+        <div class="body">
+          <h3>물류센터 입출고 KPI 대시보드 v3</h3>
+          <div class="tagline">SCM-PM · 운영자 일·주·월 단위 KPI 모니터링</div>
+          <p>입출고 물동량·CAPA·출고율·재고 정확도·반품 처리 흐름을 일·주·월 단위로 보여줍니다. KPI 카드, Chart.js 기반 시계열·박스플롯·구성비 차트, 이슈 리스트로 구성된 운영자 시점의 단일 페이지 대시보드입니다.</p>
+          <div class="feats">
+            <span class="feat-chip">KPI 카드</span>
+            <span class="feat-chip">Chart.js 시계열</span>
+            <span class="feat-chip">박스플롯</span>
+            <span class="feat-chip">이슈 리스트</span>
+            <span class="feat-chip">PNG 내보내기</span>
+          </div>
+          <a href="dashboards/outbound/" class="btn btn-primary" target="_blank" rel="noopener">라이브 데모 열기 ↗</a>
+        </div>
+        <div class="preview">
+          <div class="preview-icon">KPI v3</div>
+          <div class="preview-label">물동량 · CAPA · 출고율 · 재고 정확도 · 반품</div>
+        </div>
+      </article>
+
+    </div>
+
+    <details class="arch-toggle">
+      <summary>AI 파이프라인 아키텍처 자세히 보기 (8단계 산출물 흐름)</summary>
+      <div class="arch-body">
+        <p style="color: var(--muted); margin-top: 0;">각 단계는 직전 산출물을 입력으로 받아 LLM이 차기 단계 산출물을 생성합니다. 단계별로 JSON(구조화 데이터)과 MD(설명문) 한 쌍을 동시에 출력해 후속 단계와 사람 검토를 동시에 지원합니다.</p>
+        <div class="stages">
+          <div class="stage"><span class="stage-num">01</span><span class="stage-name">profile</span><div class="stage-desc">데이터셋 프로파일링</div></div>
+          <div class="stage"><span class="stage-num">02</span><span class="stage-name">eda</span><div class="stage-desc">분포·결측·이상치</div></div>
+          <div class="stage"><span class="stage-num">03</span><span class="stage-name">diagnosis</span><div class="stage-desc">KPI 원본 + SKU 분류</div></div>
+          <div class="stage"><span class="stage-num">04</span><span class="stage-name">problem</span><div class="stage-desc">문제 정의·우선순위</div></div>
+          <div class="stage"><span class="stage-num">05</span><span class="stage-name">kpi</span><div class="stage-desc">KPI 현재값·게이트 경보</div></div>
+          <div class="stage"><span class="stage-num">06</span><span class="stage-name">impact</span><div class="stage-desc">임팩트 시뮬레이션</div></div>
+          <div class="stage"><span class="stage-num">07</span><span class="stage-name">action</span><div class="stage-desc">액션 인덱스·실행 계획</div></div>
+          <div class="stage"><span class="stage-num">08</span><span class="stage-name">dashboard</span><div class="stage-desc">단일 페이지 의사결정 화면</div></div>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <p class="section-eyebrow">Stack</p>
+    <h2>사용 기술</h2>
+    <div class="stack-grid">
+      <div class="stack-col">
+        <h4>데이터 · 분석</h4>
+        <div class="stack-chips">
+          <span>Python</span>
+          <span>pandas</span>
+          <span>SQL</span>
+          <span>Power BI</span>
+          <span>Tableau</span>
+        </div>
+      </div>
+      <div class="stack-col">
+        <h4>AI · 파이프라인</h4>
+        <div class="stack-chips">
+          <span>LLM</span>
+          <span>구조화 출력 (JSON)</span>
+          <span>단계별 산출물 검증</span>
+        </div>
+      </div>
+      <div class="stack-col">
+        <h4>대시보드 · 프론트</h4>
+        <div class="stack-chips">
+          <span>HTML</span>
+          <span>CSS</span>
+          <span>Chart.js</span>
+          <span>html2canvas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="copy">SCM 운영기획 · 사이드 프로젝트 포트폴리오</p>
+    <div class="contact">연락처는 별도 제출 자료 참조</div>
+  </div>
+</footer>
+
+</body>
+</html>
